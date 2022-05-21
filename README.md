@@ -2,6 +2,8 @@
 My Helm Charts
 
 ## Host helm charts in you own repo.
+## Prerequisites, Chart releaser needs to be installed
+https://github.com/helm/chart-releaser
 
 Create a new repo in GitHub then clone it
 ```
