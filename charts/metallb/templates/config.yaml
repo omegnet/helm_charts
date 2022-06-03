@@ -2,12 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "metallb.fullname" . }}
+  name: {{ template "metallb.configMapName" . }}
   labels:
-    heritage: {{ .Release.Service | quote }}
-    release: {{ .Release.Name | quote }}
-    chart: {{ template "metallb.chart" . }}
-    app: {{ template "metallb.name" . }}
+    {{- include "metallb.labels" . | nindent 4 }}
 data:
-{{ toYaml .Values.configInline | indent 4 }}
+  config: |
+{{- toYaml .Values.configInline | nindent 4 }}
 {{- end }}

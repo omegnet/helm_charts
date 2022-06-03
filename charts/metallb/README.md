@@ -1,150 +1,113 @@
-MetalLB
--------
+# metallb
 
-MetalLB is a load-balancer implementation for bare metal [Kubernetes][k8s-home]
-clusters, using standard routing protocols.
+![Version: 0.9.6](https://img.shields.io/badge/Version-0.9.6-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: v0.9.6](https://img.shields.io/badge/AppVersion-v0.9.6-informational?style=flat-square)
 
-TL;DR;
-------
+A network load-balancer implementation for Kubernetes using standard routing protocols
 
-```console
-$ helm install --name metallb stable/metallb
-```
+**Homepage:** <https://metallb.universe.tf>
 
-Introduction
-------------
+## Source Code
 
-This chart bootstraps a [MetalLB][metallb-home] installation on
-a [Kubernetes][k8s-home] cluster using the [Helm][helm-home] package manager.
-This chart provides an implementation for LoadBalancer Service objects.
+* <https://github.com/metallb/metallb>
 
-MetalLB is a cluster service, and as such can only be deployed as a
-cluster singleton. Running multiple installations of MetalLB in a
-single cluster is not supported.
+## Values
 
-Prerequisites
--------------
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| configInline | object | `{}` |  |
+| controller.affinity | object | `{}` |  |
+| controller.enabled | bool | `true` |  |
+| controller.image.pullPolicy | string | `nil` |  |
+| controller.image.repository | string | `"quay.io/metallb/controller"` |  |
+| controller.image.tag | string | `nil` |  |
+| controller.livenessProbe.enabled | bool | `true` |  |
+| controller.livenessProbe.failureThreshold | int | `3` |  |
+| controller.livenessProbe.initialDelaySeconds | int | `10` |  |
+| controller.livenessProbe.periodSeconds | int | `10` |  |
+| controller.livenessProbe.successThreshold | int | `1` |  |
+| controller.livenessProbe.timeoutSeconds | int | `1` |  |
+| controller.logLevel | string | `"info"` | Controller log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none` |
+| controller.nodeSelector | object | `{}` |  |
+| controller.podAnnotations | object | `{}` |  |
+| controller.readinessProbe.enabled | bool | `true` |  |
+| controller.readinessProbe.failureThreshold | int | `3` |  |
+| controller.readinessProbe.initialDelaySeconds | int | `10` |  |
+| controller.readinessProbe.periodSeconds | int | `10` |  |
+| controller.readinessProbe.successThreshold | int | `1` |  |
+| controller.readinessProbe.timeoutSeconds | int | `1` |  |
+| controller.resources | object | `{}` |  |
+| controller.securityContext.fsGroup | int | `65534` |  |
+| controller.securityContext.runAsNonRoot | bool | `true` |  |
+| controller.securityContext.runAsUser | int | `65534` |  |
+| controller.serviceAccount.annotations | object | `{}` |  |
+| controller.serviceAccount.create | bool | `true` |  |
+| controller.serviceAccount.name | string | `""` |  |
+| controller.tolerations | list | `[]` |  |
+| existingConfigMap | string | `""` |  |
+| fullnameOverride | string | `""` |  |
+| imagePullSecrets | list | `[]` |  |
+| nameOverride | string | `""` |  |
+| prometheus.metricsPort | int | `7472` |  |
+| prometheus.podMonitor.additionalLabels | object | `{}` |  |
+| prometheus.podMonitor.enabled | bool | `false` |  |
+| prometheus.podMonitor.interval | string | `nil` |  |
+| prometheus.podMonitor.jobLabel | string | `"app.kubernetes.io/name"` |  |
+| prometheus.podMonitor.metricRelabelings | list | `[]` |  |
+| prometheus.podMonitor.relabelings | list | `[]` |  |
+| prometheus.prometheusRule.additionalLabels | object | `{}` |  |
+| prometheus.prometheusRule.addressPoolExhausted.enabled | bool | `true` |  |
+| prometheus.prometheusRule.addressPoolExhausted.labels.severity | string | `"alert"` |  |
+| prometheus.prometheusRule.addressPoolUsage.enabled | bool | `true` |  |
+| prometheus.prometheusRule.addressPoolUsage.thresholds[0].labels.severity | string | `"warning"` |  |
+| prometheus.prometheusRule.addressPoolUsage.thresholds[0].percent | int | `75` |  |
+| prometheus.prometheusRule.addressPoolUsage.thresholds[1].labels.severity | string | `"warning"` |  |
+| prometheus.prometheusRule.addressPoolUsage.thresholds[1].percent | int | `85` |  |
+| prometheus.prometheusRule.addressPoolUsage.thresholds[2].labels.severity | string | `"alert"` |  |
+| prometheus.prometheusRule.addressPoolUsage.thresholds[2].percent | int | `95` |  |
+| prometheus.prometheusRule.bgpSessionDown.enabled | bool | `true` |  |
+| prometheus.prometheusRule.bgpSessionDown.labels.severity | string | `"alert"` |  |
+| prometheus.prometheusRule.configNotLoaded.enabled | bool | `true` |  |
+| prometheus.prometheusRule.configNotLoaded.labels.severity | string | `"warning"` |  |
+| prometheus.prometheusRule.enabled | bool | `false` |  |
+| prometheus.prometheusRule.extraAlerts | list | `[]` |  |
+| prometheus.prometheusRule.staleConfig.enabled | bool | `true` |  |
+| prometheus.prometheusRule.staleConfig.labels.severity | string | `"warning"` |  |
+| prometheus.scrapeAnnotations | bool | `false` |  |
+| psp.create | bool | `true` |  |
+| rbac.create | bool | `true` |  |
+| speaker.affinity | object | `{}` |  |
+| speaker.enabled | bool | `true` |  |
+| speaker.image.pullPolicy | string | `nil` |  |
+| speaker.image.repository | string | `"quay.io/metallb/speaker"` |  |
+| speaker.image.tag | string | `nil` |  |
+| speaker.livenessProbe.enabled | bool | `true` |  |
+| speaker.livenessProbe.failureThreshold | int | `3` |  |
+| speaker.livenessProbe.initialDelaySeconds | int | `10` |  |
+| speaker.livenessProbe.periodSeconds | int | `10` |  |
+| speaker.livenessProbe.successThreshold | int | `1` |  |
+| speaker.livenessProbe.timeoutSeconds | int | `1` |  |
+| speaker.logLevel | string | `"info"` | Speaker log level. Must be one of: `all`, `debug`, `info`, `warn`, `error` or `none` |
+| speaker.memberlist.enabled | bool | `true` |  |
+| speaker.memberlist.mlBindPort | int | `7946` |  |
+| speaker.nodeSelector | object | `{}` |  |
+| speaker.podAnnotations | object | `{}` |  |
+| speaker.readinessProbe.enabled | bool | `true` |  |
+| speaker.readinessProbe.failureThreshold | int | `3` |  |
+| speaker.readinessProbe.initialDelaySeconds | int | `10` |  |
+| speaker.readinessProbe.periodSeconds | int | `10` |  |
+| speaker.readinessProbe.successThreshold | int | `1` |  |
+| speaker.readinessProbe.timeoutSeconds | int | `1` |  |
+| speaker.resources | object | `{}` |  |
+| speaker.serviceAccount.annotations | object | `{}` |  |
+| speaker.serviceAccount.create | bool | `true` |  |
+| speaker.serviceAccount.name | string | `""` |  |
+| speaker.tolerateMaster | bool | `true` |  |
+| speaker.tolerations | list | `[]` |  |
+| speaker.frr.enabled | bool | `true` |  |
+| speaker.frr.logLevel | string | `"informational"` | FRR process log level. Must be one of: `informational`, `warning`, `errors` or `debugging` |
+| speaker.frr.image.pullPolicy | string | `nil` |  |
+| speaker.frr.image.repository | string | `"frrouting/frr"` |  |
+| speaker.frr.image.tag | string | `v7.5.1` |  |
 
--  Kubernetes 1.9+
-
-Installing the Chart
---------------------
-
-The chart can be installed as follows:
-
-```console
-$ helm install --name metallb stable/metallb
-```
-
-The command deploys MetalLB on the Kubernetes cluster. This chart does
-not provide a default configuration; MetalLB will not act on your
-Kubernetes Services until you provide
-one. The [configuration](#configuration) section lists various ways to
-provide this configuration.
-
-Uninstalling the Chart
-----------------------
-
-To uninstall/delete the `metallb` deployment:
-
-```console
-$ helm delete metallb
-```
-
-The command removes all the Kubernetes components associated with the
-chart, but will not remove the release metadata from `helm` — this will prevent
-you, for example, if you later try to create a release also named `metallb`). To
-fully delete the release and release history, simply [include the `--purge`
-flag][helm-usage]:
-
-```console
-$ helm delete --purge metallb
-```
-## My custom Chart
-
-Using protocol `arp` does not work with helm but you can use `layer2` for the configMap to be created by helm.
-
-```
-cd common-omegnet-tools/helm/
-helm install --name metallb   ./metallb --namespace metallb-system
-```
-To list helm release only for the namespace
-```
-helm list --namespaces metallb-system
-```
-To update the chart
-```
-helm upgrade metallb ./metallb
-```
-To delete chart
-```
-helm del --purge metallb
-
-Configuration
--------------
-
-See `values.yaml` for configuration notes. Specify each parameter
-using the `--set key=value[,key=value]` argument to `helm
-install`. For example,
-
-```console
-$ helm install --name metallb \
-  --set rbac.create=false \
-    stable/metallb
-```
-
-The above command disables the use of RBAC rules.
-
-Alternatively, a YAML file that specifies the values for the above
-parameters can be provided while installing the chart. For example,
-
-```console
-$ helm install --name metallb -f values.yaml stable/metallb
-```
-
-By default, this chart does not install a configuration for MetalLB, and simply
-warns you that you must follow [the configuration instructions on MetalLB's
-website][metallb-config] to create an appropriate ConfigMap.
-
-**Please note:** By default, this chart expects a ConfigMap named
-'metallb-config' within the same namespace as the chart is
-deployed. _This is different than the MetalLB documentation_, which
-asks you to create a ConfigMap in the `metallb-system` namespace, with
-the name of 'config'.
-
-For simple setups that only use MetalLB's [ARP mode][metallb-arpndp-concepts],
-you can specify a single IP range using the `arpAddresses` parameter to have the
-chart install a working configuration for you:
-
-```console
-$ helm install --name metallb \
-  --set arpAddresses=192.168.16.240/30 \
-  stable/metallb
-```
-
-If you have a more complex configuration and want Helm to manage it for you, you
-can provide it in the `config` parameter. The configuration format is
-[documented on MetalLB's website][metallb-config].
-
-```console
-$ cat values.yaml
-configInline:
-  peers:
-  - peer-address: 10.0.0.1
-    peer-asn: 64512
-    my-asn: 64512
-  address-pools:
-  - name: default
-    protocol: bgp
-    addresses:
-    - 198.51.100.0/24
-
-$ helm install --name metallb -f values.yaml stable/metallb
-```
-
-[helm-home]: https://helm.sh
-[helm-usage]: https://docs.helm.sh/using_helm/
-[k8s-home]: https://kubernetes.io
-[metallb-arpndp-concepts]: https://metallb.universe.tf/concepts/arp-ndp/
-[metallb-config]: https://metallb.universe.tf/configuration/
-[metallb-home]: https://metallb.universe.tf
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v1.5.0](https://github.com/norwoodj/helm-docs/releases/v1.5.0)
