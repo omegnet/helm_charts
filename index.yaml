@@ -50,6 +50,21 @@ entries:
     - https://github.com/omegnet/helm_charts/releases/download/jenkins-1.10.0/jenkins-1.10.0.tgz
     version: 1.10.0
   metallb:
+  - apiVersion: v2
+    appVersion: v0.12.1
+    created: "2022-06-07T17:57:35.272995837-04:00"
+    description: A network load-balancer implementation for Kubernetes using standard
+      routing protocols
+    digest: e4ac46b7af9db4327917c6fb32cfd3a79fadfc4d9b78298ee8ff75479acff6fd
+    home: https://metallb.universe.tf
+    icon: https://metallb.universe.tf/images/logo/metallb-white.png
+    name: metallb
+    sources:
+    - https://github.com/metallb/metallb
+    type: application
+    urls:
+    - https://github.com/omegnet/helm_charts/releases/download/metallb-0.12.1/metallb-0.12.1.tgz
+    version: 0.12.1
   - apiVersion: v1
     appVersion: 0.8.1
     created: "2022-05-21T12:28:18.406304653-04:00"
@@ -190,4 +205,4 @@ entries:
     urls:
     - https://github.com/omegnet/helm_charts/releases/download/prometheus-10.0.1/prometheus-10.0.1.tgz
     version: 10.0.1
-generated: "2022-05-21T12:28:17.685003397-04:00"
+generated: "2022-06-07T17:57:35.838341859-04:00"
