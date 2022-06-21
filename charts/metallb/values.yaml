@@ -21,8 +21,7 @@ existingConfigMap: ""
 #
 # Refer to https://metallb.universe.tf/configuration/ for
 # available options.
-configInline:
-  config:
+configInline: ""
 
 rbac:
   # create specifies whether to install and use RBAC rules.
