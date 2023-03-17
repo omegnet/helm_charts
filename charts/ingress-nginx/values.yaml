@@ -117,8 +117,7 @@ controller:
     # -- Parameters is a link to a custom resource containing additional
     # configuration for the controller. This is optional if the controller
     # does not require extra parameters.
-    parameters: 
-      enable-ssl-passthrough: true
+    parameters: {}
 
   # -- For backwards compatibility with ingress.class annotation, use ingressClass.
   # Algorithm is as follows, first ingressClassName is considered, if not present, controller looks for ingress.class annotation
@@ -178,7 +177,8 @@ controller:
 
   # -- Additional command line arguments to pass to nginx-ingress-controller
   # E.g. to specify the default SSL certificate you can use
-  extraArgs: 
+  extraArgs:
+    enable-ssl-passthrough: true 
   ## extraArgs:
   ##   default-ssl-certificate: "<namespace>/<secret_name>"
 
