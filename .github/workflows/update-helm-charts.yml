@@ -1,8 +1,8 @@
 name: Update Helm Charts
 
 on:
-  schedule:
-    # - cron: '0 0 * * 0' # Runs weekly at midnight on Sundays
+  # schedule:
+  #   - cron: '0 0 * * 0' # Runs weekly at midnight on Sundays
   workflow_dispatch: # Allows manual trigger
 
 jobs:
@@ -28,7 +28,7 @@ jobs:
             echo "Updating dependencies for $dir"
             helm dependency update $dir || echo "No dependencies to update for $dir"
           done
-      # Step 4 Test the new changes 
+      # Step 4: Lint and validate Helm charts
       - name: Lint and validate Helm charts
         run: |
           for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
