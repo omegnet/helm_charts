@@ -10,18 +10,67 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    env:
+      CHART_VERSIONS=$(ls charts)
+
+    #   CHART_VERSIONS: |
+    #     ingress-nginx-4.1.4
+    #     example-chart-1.2.3
+    #     another-chart-0.9.0
+
     steps:
+      # Step 1: Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Step 2: Configure Git
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      
+      # Step 3: Validate each chart before release
+      - name: Validate Helm Charts
+        run: |
+          for CHART in $CHART_VERSIONS; do
+              echo "Linting chart $CHART..."
+              helm lint ./charts/$CHART || exit 1
+          done
+        
+      # Step 4: Loop through each chart version
+      - name: Process each chart release
+        run: |
+          for CHART in $CHART_VERSIONS; do
+            echo "Processing $CHART..."
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+            # Check if the release exists
+            RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/${{ github.repository }}/releases/tags/$CHART)
+
+            if echo "$RELEASE" | grep -q '"id":'; then
+              echo "Release $CHART already exists. Skipping..."
+              continue
+            fi
+
+            # Run chart-releaser for new release
+            helm package ./charts/$CHART
+            helm repo index . --url https://github.com/${{ github.repository }}/releases
+
+            # Create GitHub Release
+            echo "Creating release for $CHART..."
+            curl -s -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/${{ github.repository }}/releases \
+              -d @- <<EOF
+            {
+              "tag_name": "$CHART",
+              "name": "$CHART",
+              "body": "Automated release for $CHART",
+              "draft": false,
+              "prerelease": false
+            }
+EOF
+          done
