@@ -47,8 +47,11 @@ jobs:
           fi
 
           # Read the chart_versions.yaml file using yq
-          CHARTS=$(yq '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
-
+          CHARTS=$(yq -o=json '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
+          if [ -z "$CHARTS" ]; then
+              echo "No charts found in configuration file. Exiting..."
+              exit 1
+          fi
           # Loop through each chart and process it
           while IFS= read -r CHART_VERSION; do
               CHART=$(echo "$CHART_VERSION" | awk '{print $1}')  # Chart name
