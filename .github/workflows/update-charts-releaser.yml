@@ -35,7 +35,9 @@ jobs:
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
-        
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          
       - name: Create GitHub Release
         if: ${{ env.exists == 'false' }}
         uses: actions/create-release@v1
@@ -45,6 +47,5 @@ jobs:
           body: "Automated release of ingress-nginx version 4.1.4"
           draft: false
           prerelease: false
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        
       
