@@ -26,7 +26,10 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo add sonatype https://sonatype.github.io/helm3-charts/
+          helm repo add curiedfcharts https://curie-data-factory.github.io/helm-charts
+          helm repo add metallb https://metallb.github.io/metallb
+          helm repo add longhorn https://charts.longhorn.io
+          helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
           helm repo update
 
       # Step 4: Specify Versions and Upgrade Charts
