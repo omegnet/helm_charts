@@ -31,7 +31,7 @@ jobs:
       # Step 4: Validate each chart before release
       - name: Validate Helm Charts
         run: |
-          for CHART in ${{ env.chart_list }}; do
+          for CHART in $(echo ${{ env.chart_list }}); do  # Corrected to use command substitution
               echo "Linting chart $CHART..."
               helm lint ./charts/$CHART || exit 1
           done
@@ -40,7 +40,7 @@ jobs:
       - name: Process each chart release
         run: |
           set -e  # Exit on any error
-          for CHART in ${{ env.chart_list }}; do
+          for CHART in $(echo ${{ env.chart_list }}); do  # Corrected to use command substitution
             echo "Processing $CHART..."
 
             # Check if the release exists
@@ -70,5 +70,5 @@ jobs:
               "draft": false,
               "prerelease": false
             }
-       EOF
+EOF
           done
