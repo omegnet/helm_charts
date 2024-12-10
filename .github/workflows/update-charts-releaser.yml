@@ -1,23 +1,61 @@
 name: Release Charts
 
 on:
-  workflow_run:
-    workflows: ["Update Helm Charts"]
-    branches: [workflow]
-    types: 
-      - completed
   push:
     branches:
       - workflow
-  workflow_dispatch: # Allows manual trigger
 
 jobs:
-  on-success:
+  update-helm-charts:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - run: echo 'The Update Helm Charts workflow was successfully'
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Install Helm
+      - name: Install Helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod +x get_helm.sh
+          ./get_helm.sh
+
+      # Step 3: Update Helm dependencies
+      - name: Update Helm dependencies
+        run: |
+          for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
+            echo "Updating dependencies for $dir"
+            helm dependency update $dir || echo "No dependencies to update for $dir"
+          done
+
+      # Step 4: Lint and validate Helm charts
+      - name: Lint and validate Helm charts
+        run: |
+          for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
+            helm lint $dir || exit 1
+          done
+
+      # Step 5: Commit changes if any
+      - name: Commit changes
+        run: |
+          git config --local user.name "GitHub Actions Bot"
+          git config --local user.email "actions@github.com"
+          git add .
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Automated update of Helm chart dependencies"
+          fi
+
+      # Step 6: Push changes back to the repository
+      - name: Push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push
+
   release:
+    needs: update-helm-charts  # Ensure this job runs after the update job
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -36,13 +74,14 @@ jobs:
 
       # Step 3: Get Chart Versions
       - name: Get Chart Versions
-        id: get_chart_versions
-        run: echo "chart_list=$(ls charts | tr '\n' ',')" >> $GITHUB_ENV  # Store chart versions in environment variable
+        run: |
+          CHART_LIST=$(ls charts | tr '\n' ',')
+          echo "chart_list=$CHART_LIST" >> "$GITHUB_ENV"
 
-      # Step 4: Validate each chart before release
+      # Step 4: Validate Helm Charts
       - name: Validate Helm Charts
         run: |
-          IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
+          IFS=',' read -ra CHARTS <<< "$chart_list"  # Use $chart_list instead of ${{ env.chart_list }}
           for CHART in "${CHARTS[@]}"; do
               echo "Linting chart $CHART..."
               helm lint ./charts/$CHART || exit 1
