@@ -10,10 +10,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    env:
-      CHART_VERSIONS: $(ls charts)
     steps:
-
       # Step 1: Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,19 +22,25 @@ jobs:
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-      
-      # Step 3: Validate each chart before release
+
+      # Step 3: Get Chart Versions
+      - name: Get Chart Versions
+        id: get_chart_versions
+        run: echo "chart_list=$(ls charts)" >> $GITHUB_ENV  # Store chart versions in environment variable
+
+      # Step 4: Validate each chart before release
       - name: Validate Helm Charts
         run: |
-          for CHART in $CHART_VERSIONS; do
+          for CHART in ${{ env.chart_list }}; do
               echo "Linting chart $CHART..."
               helm lint ./charts/$CHART || exit 1
           done
-        
-      # Step 4: Loop through each chart version
+
+      # Step 5: Loop through each chart version
       - name: Process each chart release
         run: |
-          for CHART in $CHART_VERSIONS; do
+          set -e  # Exit on any error
+          for CHART in ${{ env.chart_list }}; do
             echo "Processing $CHART..."
 
             # Check if the release exists
