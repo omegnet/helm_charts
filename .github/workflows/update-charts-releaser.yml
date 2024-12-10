@@ -12,12 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CHART_VERSIONS=$(ls charts)
-
-    #   CHART_VERSIONS: |
-    #     ingress-nginx-4.1.4
-    #     example-chart-1.2.3
-    #     another-chart-0.9.0
-
     steps:
       # Step 1: Checkout repository
       - name: Checkout
