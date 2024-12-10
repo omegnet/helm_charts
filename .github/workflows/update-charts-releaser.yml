@@ -1,4 +1,4 @@
-name: Update and Release Helm Charts
+name: Update and Release Helm Charts with Specified Versions
 
 on:
   push:
@@ -6,11 +6,11 @@ on:
       - workflow
 
 jobs:
-  update-helm-charts:
+  update-and-release:
     runs-on: ubuntu-latest
     steps:
       # Step 1: Checkout repository
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       # Step 2: Install Helm
@@ -20,52 +20,51 @@ jobs:
           chmod +x get_helm.sh
           ./get_helm.sh
 
-      # Step 3: Add and Update Public Helm Repositories
-      - name: Add and Update Helm Repos
+      # Step 3: Add Helm Repositories
+      - name: Add Helm Repositories
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-          helm repo add curiedfcharts https://curie-data-factory.github.io/helm-charts
-          helm repo add metallb https://metallb.github.io/metallb
-          helm repo add longhorn https://charts.longhorn.io
-          helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+          helm repo add sonatype https://sonatype.github.io/helm3-charts/
           helm repo update
 
-      # Step 4: Sync Local Charts with Public Repositories
-      - name: Sync and Update Local Charts
+      # Step 4: Specify Versions and Upgrade Charts
+      - name: Upgrade Charts to Specified Versions
         run: |
           set -e
-          for CHART_PATH in $(find ./charts -type f -name "Chart.yaml" -exec dirname {} \;); do
-            CHART_NAME=$(basename $CHART_PATH)
+          echo "Reading specified chart versions..."
+          CONFIG_FILE="./chart-versions.yaml"
+
+          # Ensure the configuration file exists
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "Configuration file $CONFIG_FILE not found! Exiting..."
+            exit 1
+          fi
+
+          # Parse and process each chart
+          while read -r CHART_NAME DESIRED_VERSION; do
             echo "Processing chart: $CHART_NAME"
+            echo "Upgrading to version: $DESIRED_VERSION"
 
-            # Fetch current version
-            CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
-
-            # Fetch latest version
-            LATEST_VERSION=$(helm search repo $CHART_NAME --devel | awk '/^sonatype/ {print $2}' | head -n 1)
-
-            if [ -z "$LATEST_VERSION" ]; then
-              echo "Unable to find the latest version for $CHART_NAME. Skipping..."
+            # Validate if the version exists
+            VALID_VERSION=$(helm search repo $CHART_NAME --devel | awk -v version="$DESIRED_VERSION" '$2 == version {print $2}')
+            if [ -z "$VALID_VERSION" ]; then
+              echo "Version $DESIRED_VERSION for $CHART_NAME not found in the Helm repository. Skipping..."
               continue
             fi
 
-            echo "Current version: $CURRENT_VERSION"
-            echo "Latest version: $LATEST_VERSION"
+            echo "Valid version $VALID_VERSION found for $CHART_NAME."
 
-            # Check if update is required
-            if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
-              echo "Updating $CHART_NAME to $LATEST_VERSION..."
-              helm pull sonatype/$CHART_NAME --version $LATEST_VERSION --untar -d $CHART_PATH
-              sed -i "s/^version:.*/version: $LATEST_VERSION/" "$CHART_PATH/Chart.yaml"
-            else
-              echo "$CHART_NAME is already up to date. Skipping."
-            fi
-          done
+            # Update the chart in the repository
+            CHART_PATH="./charts/$CHART_NAME"
+            helm pull $CHART_NAME --version $DESIRED_VERSION --untar -d $CHART_PATH
+            sed -i "s/^version:.*/version: $DESIRED_VERSION/" "$CHART_PATH/Chart.yaml"
+
+          done < <(awk '/^charts:/ {flag=1; next} /^  - / && flag {print $2,$3}' "$CONFIG_FILE")
 
       # Step 5: Commit Changes if Any
-      - name: Commit and Push Changes
+      - name: Commit Changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -75,22 +74,11 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Automated update of Helm charts"
+            git commit -m "Automated update of specified Helm charts"
             git push origin workflow
-          fi
 
-  release:
-    needs: update-helm-charts
-    runs-on: ubuntu-latest
-    steps:
-      # Step 1: Checkout Repository
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      # Step 2: Process and Release Charts
-      - name: Process and Release Charts
+      # Step 6: Create GitHub Releases for Updated Charts
+      - name: Create GitHub Releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
