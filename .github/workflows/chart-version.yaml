@@ -1,0 +1,6 @@
+charts:
+  - bitnami/nginx: 11.5.5
+  - metallb/metallb: 0.14.8
+  - nfs-subdir-external-provisioner/nfs-subdir-external-provisioner: 4.0.18
+  - longhorn/longhorn: 1.7.2
+  - curiedfcharts/nexus: 1.2.4
