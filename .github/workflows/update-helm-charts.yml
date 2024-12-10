@@ -1,9 +1,9 @@
 name: Update Helm Charts
 
-on:
-  push:
-    branches:
-      - workflow
+# on:
+#   push:
+#     branches:
+#       - workflow
   # schedule:
   #   - cron: '0 0 * * 0' # Runs weekly at midnight on Sundays
   workflow_dispatch: # Allows manual trigger

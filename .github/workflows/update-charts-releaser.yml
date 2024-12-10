@@ -10,6 +10,8 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    env:
+      exists: false
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,7 +23,28 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          TAG_NAME="ingress-nginx-4.1.4"
+          if git tag | grep -q "$TAG_NAME"; then
+            echo "exists=true" >> $GITHUB_ENV
+          else
+            echo "exists=false" >> $GITHUB_ENV
+          fi
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
+        
+      - name: Create GitHub Release
+        if: ${{ env.exists == 'false' }}
+        uses: actions/create-release@v1
+        with:
+          tag_name: ingress-nginx-4.1.4
+          release_name: "Ingress NGINX 4.1.4"
+          body: "Automated release of ingress-nginx version 4.1.4"
+          draft: false
+          prerelease: false
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      
