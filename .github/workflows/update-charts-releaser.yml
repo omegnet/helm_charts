@@ -11,8 +11,9 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     env:
-      CHART_VERSIONS=$(ls charts)
+      CHART_VERSIONS: $(ls charts)
     steps:
+
       # Step 1: Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
