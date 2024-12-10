@@ -26,12 +26,13 @@ jobs:
       # Step 3: Get Chart Versions
       - name: Get Chart Versions
         id: get_chart_versions
-        run: echo "chart_list=$(ls charts)" >> $GITHUB_ENV  # Store chart versions in environment variable
+        run: echo "chart_list=$(ls charts | tr '\n' ',')" >> $GITHUB_ENV  # Store chart versions in environment variable
 
       # Step 4: Validate each chart before release
       - name: Validate Helm Charts
         run: |
-          for CHART in $(echo ${{ env.chart_list }}); do  # Corrected to use command substitution
+          IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
+          for CHART in "${CHARTS[@]}"; do
               echo "Linting chart $CHART..."
               helm lint ./charts/$CHART || exit 1
           done
@@ -40,7 +41,8 @@ jobs:
       - name: Process each chart release
         run: |
           set -e  # Exit on any error
-          for CHART in $(echo ${{ env.chart_list }}); do  # Corrected to use command substitution
+          IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
+          for CHART in "${CHARTS[@]}"; do
             echo "Processing $CHART..."
 
             # Check if the release exists
