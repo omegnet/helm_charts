@@ -1,12 +1,22 @@
 name: Release Charts
 
 on:
+  workflow_run:
+    workflows: ["Update Helm Charts"]
+    branches: [workflow]
+    types: 
+      - completed
   push:
     branches:
       - workflow
   workflow_dispatch: # Allows manual trigger
 
 jobs:
+  on-success:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - run: echo 'The Update Helm Charts workflow was successfully'
   release:
     permissions:
       contents: write
