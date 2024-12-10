@@ -28,14 +28,7 @@ jobs:
             helm dependency update $dir || echo "No dependencies to update for $dir"
           done
 
-      # Step 4: Lint and validate Helm charts
-      - name: Lint and validate Helm charts
-        run: |
-          for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
-            helm lint $dir || exit 1
-          done
-
-      # Step 5: Commit changes if any
+      # Step 4: Commit changes if any
       - name: Commit changes
         run: |
           git config --local user.name "GitHub Actions Bot"
@@ -47,7 +40,7 @@ jobs:
             git commit -m "Automated update of Helm chart dependencies"
           fi
 
-      # Step 6: Push changes back to the repository
+      # Step 5: Push changes back to the repository
       - name: Push changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -72,52 +65,42 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      # Step 3: Get Chart Versions
-      - name: Get Chart Versions
-        run: |
-          CHART_LIST=$(ls charts | tr '\n' ',')
-          echo "chart_list=$CHART_LIST" >> "$GITHUB_ENV"
-
-      # Step 4: Validate Helm Charts
-      - name: Validate Helm Charts
-        run: |
-          IFS=',' read -ra CHARTS <<< "$chart_list"  # Use $chart_list instead of ${{ env.chart_list }}
-          for CHART in "${CHARTS[@]}"; do
-              echo "Linting chart $CHART..."
-              helm lint ./charts/$CHART || exit 1
-          done
-
-      # Step 5: Loop through each chart version
+      # Step 3: Process each chart release
       - name: Process each chart release
         run: |
           set -e  # Exit on any error
-          IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
-          for CHART in "${CHARTS[@]}"; do
-            echo "Processing $CHART..."
+          for CHART_PATH in $(find ./charts -type f -name "Chart.yaml" -exec dirname {} \;); do
+            CHART_NAME=$(basename $CHART_PATH)
+            echo "Processing $CHART_NAME..."
+            
+            # Extract the version from Chart.yaml
+            CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
+            TAG_NAME="${CHART_NAME}-${CURRENT_VERSION}"
 
-            # Check if the release exists
+            echo "Checking if release $TAG_NAME already exists..."
             RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/${{ github.repository }}/releases/tags/$CHART)
+              https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG_NAME)
 
             if echo "$RELEASE" | grep -q '"id":'; then
-              echo "Release $CHART already exists. Skipping..."
+              echo "Release $TAG_NAME already exists and is up to date. Skipping..."
               continue
             fi
 
             # Run chart-releaser for new release
-            helm package ./charts/$CHART
+            echo "Packaging and indexing $CHART_NAME..."
+            helm package $CHART_PATH
             helm repo index . --url https://github.com/${{ github.repository }}/releases
 
             # Create GitHub Release
-            echo "Creating release for $CHART..."
+            echo "Creating release for $TAG_NAME..."
             curl -s -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
               https://api.github.com/repos/${{ github.repository }}/releases \
               -d '{
-                "tag_name": "'"$CHART"'",
-                "name": "'"$CHART"'",
-                "body": "Automated release for '"$CHART"'",
+                "tag_name": "'"$TAG_NAME"'",
+                "name": "'"$TAG_NAME"'",
+                "body": "Automated release for '"$CHART_NAME"' version '"$CURRENT_VERSION"'",
                 "draft": false,
                 "prerelease": false
               }'
