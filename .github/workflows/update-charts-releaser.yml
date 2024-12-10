@@ -1,4 +1,4 @@
-name: Release Charts
+name: Update and Release Helm Charts
 
 on:
   push:
@@ -20,37 +20,59 @@ jobs:
           chmod +x get_helm.sh
           ./get_helm.sh
 
-      # Step 3: Update Helm dependencies
-      - name: Update Helm dependencies
+      # Step 3: Add and update public Helm repositories
+      - name: Add and Update Helm Repos
         run: |
-          for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
-            echo "Updating dependencies for $dir"
-            helm dependency update $dir || echo "No dependencies to update for $dir"
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add metallb https://metallb.github.io/metallb
+          helm repo add longhorn https://charts.longhorn.io
+          helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+          helm repo update
+
+      # Step 4: Sync local charts with public repositories
+      - name: Sync and Update Local Charts
+        run: |
+          set -e
+          for CHART_PATH in $(find ./charts -type f -name "Chart.yaml" -exec dirname {} \;); do
+            CHART_NAME=$(basename $CHART_PATH)
+            echo "Processing chart: $CHART_NAME"
+
+            # Fetch current and latest versions
+            CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
+            LATEST_VERSION=$(helm search repo $CHART_NAME --devel | grep "$CHART_NAME" | awk 'NR==1 {print $2}')
+            
+            echo "Current version: $CURRENT_VERSION"
+            echo "Latest version: $LATEST_VERSION"
+
+            # Check if update is required
+            if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+              echo "Updating $CHART_NAME to $LATEST_VERSION..."
+              helm pull $CHART_NAME --version $LATEST_VERSION --untar -d $CHART_PATH
+              sed -i "s/^version:.*/version: $LATEST_VERSION/" "$CHART_PATH/Chart.yaml"
+            else
+              echo "$CHART_NAME is already up to date. Skipping."
+            fi
           done
 
-      # Step 4: Commit changes if any
-      - name: Commit changes
+      # Step 5: Commit changes if any
+      - name: Commit and Push Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.name "GitHub Actions Bot"
           git config --local user.email "actions@github.com"
           git add .
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No changes to commit."
           else
-            git commit -m "Automated update of Helm chart dependencies"
+            git commit -m "Automated update of Helm charts"
+            git push origin workflow
           fi
 
-      # Step 5: Push changes back to the repository
-      - name: Push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git push
-
   release:
-    needs: update-helm-charts  # Ensure this job runs after the update job
-    permissions:
-      contents: write
+    needs: update-helm-charts
     runs-on: ubuntu-latest
     steps:
       # Step 1: Checkout repository
@@ -65,36 +87,35 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      # Step 3: Process each chart release
-      - name: Process each chart release
+      # Step 3: Release updated charts
+      - name: Process and Release Charts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -e  # Exit on any error
+          set -e
           for CHART_PATH in $(find ./charts -type f -name "Chart.yaml" -exec dirname {} \;); do
             CHART_NAME=$(basename $CHART_PATH)
-            echo "Processing $CHART_NAME..."
-            
-            # Extract the version from Chart.yaml
             CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
             TAG_NAME="${CHART_NAME}-${CURRENT_VERSION}"
 
-            echo "Checking if release $TAG_NAME already exists..."
-            RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            # Check if the release exists
+            RELEASE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG_NAME)
 
             if echo "$RELEASE" | grep -q '"id":'; then
-              echo "Release $TAG_NAME already exists and is up to date. Skipping..."
+              echo "Release $TAG_NAME already exists. Skipping..."
               continue
             fi
 
-            # Run chart-releaser for new release
+            # Package and index the chart
             echo "Packaging and indexing $CHART_NAME..."
             helm package $CHART_PATH
             helm repo index . --url https://github.com/${{ github.repository }}/releases
 
-            # Create GitHub Release
+            # Create a new GitHub release
             echo "Creating release for $TAG_NAME..."
-            curl -s -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               https://api.github.com/repos/${{ github.repository }}/releases \
               -d '{
