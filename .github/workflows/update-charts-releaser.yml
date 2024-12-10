@@ -81,42 +81,44 @@ jobs:
       #       git push origin workflow
       #     fi
 
-      # Step 6: Create GitHub Releases for Updated Charts
-      - name: Create GitHub Releases
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Step 5: Loop through each chart version
+      - name: Process each chart release
         run: |
-          set -e
-          for CHART_PATH in $(find ./charts -type f -name "Chart.yaml" -exec dirname {} \;); do
-            CHART_NAME=$(basename $CHART_PATH)
-            CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
-            TAG_NAME="${CHART_NAME}-${CURRENT_VERSION}"
+          set -e  # Exit on any error
+          IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
+          for CHART in "${CHARTS[@]}"; do
+            echo "Processing $CHART..."
 
             # Check if the release exists
-            RELEASE=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" \
+            RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/${{ github.repository }}/releases/tags/$TAG_NAME)
+              https://api.github.com/repos/${{ github.repository }}/releases/tags/$CHART)
 
             if echo "$RELEASE" | grep -q '"id":'; then
-              echo "Release $TAG_NAME already exists. Skipping..."
+              echo "Release $CHART already exists. Skipping..."
               continue
             fi
 
-            # Package and index the chart
-            echo "Packaging and indexing $CHART_NAME..."
-            helm package $CHART_PATH
-            helm repo index . --url https://github.com/${{ github.repository }}/releases
+            # Check if the chart has been updated
+            if git diff --name-only HEAD^ HEAD | grep -q "charts/$CHART"; then
+              echo "Chart $CHART has been updated. Creating release..."
+              # Run chart-releaser for new release
+              helm package ./charts/$CHART
+              helm repo index . --url https://github.com/${{ github.repository }}/releases
 
-            # Create a new GitHub release
-            echo "Creating release for $TAG_NAME..."
-            curl -s -X POST -H "Authorization: Bearer $GITHUB_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/${{ github.repository }}/releases \
-              -d '{
-                "tag_name": "'"$TAG_NAME"'",
-                "name": "'"$TAG_NAME"'",
-                "body": "Automated release for '"$CHART_NAME"' version '"$CURRENT_VERSION"'",
-                "draft": false,
-                "prerelease": false
-              }'
+              # Create GitHub Release
+              echo "Creating release for $CHART..."
+              curl -s -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github+json" \
+                https://api.github.com/repos/${{ github.repository }}/releases \
+                -d '{
+                  "tag_name": "'"$CHART"'",
+                  "name": "'"$CHART"'",
+                  "body": "Automated release for '"$CHART"'",
+                  "draft": false,
+                  "prerelease": false
+                }'
+            else
+              echo "No changes detected for $CHART. Skipping release creation."
+            fi
           done
