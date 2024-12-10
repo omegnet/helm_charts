@@ -20,18 +20,19 @@ jobs:
           chmod +x get_helm.sh
           ./get_helm.sh
 
-      # Step 3: Add and update public Helm repositories
+      # Step 3: Add and Update Public Helm Repositories
       - name: Add and Update Helm Repos
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add sonatype https://sonatype.github.io/helm3-charts/
           helm repo add metallb https://metallb.github.io/metallb
           helm repo add longhorn https://charts.longhorn.io
           helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
           helm repo update
 
-      # Step 4: Sync local charts with public repositories
+      # Step 4: Sync Local Charts with Public Repositories
       - name: Sync and Update Local Charts
         run: |
           set -e
@@ -39,24 +40,31 @@ jobs:
             CHART_NAME=$(basename $CHART_PATH)
             echo "Processing chart: $CHART_NAME"
 
-            # Fetch current and latest versions
+            # Fetch current version
             CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
-            LATEST_VERSION=$(helm search repo $CHART_NAME --devel | grep "$CHART_NAME" | awk 'NR==1 {print $2}')
-            
+
+            # Fetch latest version
+            LATEST_VERSION=$(helm search repo $CHART_NAME --devel | awk '/^sonatype/ {print $2}' | head -n 1)
+
+            if [ -z "$LATEST_VERSION" ]; then
+              echo "Unable to find the latest version for $CHART_NAME. Skipping..."
+              continue
+            fi
+
             echo "Current version: $CURRENT_VERSION"
             echo "Latest version: $LATEST_VERSION"
 
             # Check if update is required
             if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
               echo "Updating $CHART_NAME to $LATEST_VERSION..."
-              helm pull $CHART_NAME --version $LATEST_VERSION --untar -d $CHART_PATH
+              helm pull sonatype/$CHART_NAME --version $LATEST_VERSION --untar -d $CHART_PATH
               sed -i "s/^version:.*/version: $LATEST_VERSION/" "$CHART_PATH/Chart.yaml"
             else
               echo "$CHART_NAME is already up to date. Skipping."
             fi
           done
 
-      # Step 5: Commit changes if any
+      # Step 5: Commit Changes if Any
       - name: Commit and Push Changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -75,19 +83,13 @@ jobs:
     needs: update-helm-charts
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout repository
+      # Step 1: Checkout Repository
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Step 2: Configure Git
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      # Step 3: Release updated charts
+      # Step 2: Process and Release Charts
       - name: Process and Release Charts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
