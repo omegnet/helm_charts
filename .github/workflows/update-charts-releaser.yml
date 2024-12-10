@@ -36,32 +36,39 @@ jobs:
       - name: Upgrade Charts to Specified Versions
         run: |
           set -e
+          # Specify chart versions
           echo "Reading specified chart versions..."
           CONFIG_FILE="./chart-versions.yaml"
 
           # Ensure the configuration file exists
           if [ ! -f "$CONFIG_FILE" ]; then
-            echo "Configuration file $CONFIG_FILE not found! Exiting..."
-            exit 1
+              echo "Configuration file $CONFIG_FILE not found! Exiting..."
+              exit 1
           fi
 
-          # Parse and process each chart
-          while read -r CHART_NAME DESIRED_VERSION; do
-            echo "Processing chart: $CHART_NAME"
-            echo "Upgrading to version: $DESIRED_VERSION"
+          # Read the chart_versions.yaml file using yq
+          CHARTS=$(yq '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
 
-            # Validate if the version exists
-            if ! helm search repo "$CHART_NAME" --devel | grep -q "$DESIRED_VERSION"; then
-              echo "Version $DESIRED_VERSION for $CHART_NAME not found in the Helm repository. Skipping..."
-              continue
-            fi
+          # Loop through each chart and process it
+          while IFS= read -r CHART_VERSION; do
+              CHART=$(echo "$CHART_VERSION" | awk '{print $1}')  # Chart name
+              VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')  # Desired version
 
-            # Update the chart in the repository
-            CHART_PATH="./charts/$CHART_NAME"
-            helm pull "$CHART_NAME" --version "$DESIRED_VERSION" --untar -d "$CHART_PATH"
-            sed -i "s/^version:.*/version: $DESIRED_VERSION/" "$CHART_PATH/Chart.yaml"
+              echo "Processing chart: $CHART"
+              echo "Upgrading to version: $VERSION"
 
-          done < <(awk '/^charts:/ {flag=1; next} /^  - / && flag {print $2,$3}' "$CONFIG_FILE")
+              # Check if the specified version exists
+              if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
+                  echo "Version $VERSION for $CHART found. Proceeding..."
+                  # Uncomment the following lines to perform the actual operations
+                  helm pull "$CHART" --version "$VERSION"
+                  helm repo index . --merge index.yaml
+              else
+                  echo "Version $VERSION for $CHART not found. Skipping..."
+                  continue
+              fi
+          done <<< "$CHARTS"
+
 
       # Step 5: Process each chart release
       - name: Process each chart release
