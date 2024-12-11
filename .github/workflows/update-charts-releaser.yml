@@ -47,6 +47,7 @@ jobs:
           echo "Reading specified chart versions..."
           CONFIG_FILE="./chart-versions.yaml"
           PACKAGES_DIR="./packages"
+          REPO_URL="https://omegnet.github.io/helm_charts/"
 
           # Ensure the configuration file exists
           if [ ! -f "$CONFIG_FILE" ]; then
@@ -73,9 +74,9 @@ jobs:
                   echo "Version $VERSION for $CHART found. Proceeding..."
                   helm pull "$CHART" --version "$VERSION" --destination $PACKAGES_DIR
                   # helm package "./charts/$CHART"
-                  # helm repo index $PACKAGES_DIR --merge index.yaml --url https://github.com/${{ github.repository }}/releases
-                  helm repo index $PACKAGES_DIR --merge --url https://omegnet.github.io/helm_charts/
-                  # helm repo index "$PACKAGES_DIR" --url https://omegnet.github.io/helm_charts/ 
+                  echo "helm repo index $PACKAGES_DIR --merge index.yaml --url https://github.com/${{ github.repository }}/releases"
+                  helm repo index $PACKAGES_DIR --merge --url "$REPO_URL"
+                  # helm repo index "$PACKAGES_DIR" --url "$REPO_URL" 
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
@@ -113,26 +114,26 @@ jobs:
           fi
 
       # Step 6: Push the new branch to the repository
-      - name: Push changes to gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config --local user.name "GitHub Actions Bot"
-          git config --local user.email "actions@github.com"
-          git fetch origin gh-pages
-          git checkout gh-pages || git checkout --orphan gh-pages # Use the branch or create it if it doesn't exist
-          git reset --mixed origin/gh-pages || echo "No remote branch gh-pages yet. Creating one."
+      # - name: Push changes to gh-pages
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     git config --local user.name "GitHub Actions Bot"
+      #     git config --local user.email "actions@github.com"
+      #     git fetch origin gh-pages
+      #     git checkout gh-pages || git checkout --orphan gh-pages # Use the branch or create it if it doesn't exist
+      #     git reset --mixed origin/gh-pages || echo "No remote branch gh-pages yet. Creating one."
           
-          # Ensure the necessary files (e.g., `index.yaml`) are in the working directory
-          # This assumes `index.yaml` and/or packages are already in the current directory
-          git add --all
+      #     # Ensure the necessary files (e.g., `index.yaml`) are in the working directory
+      #     # This assumes `index.yaml` and/or packages are already in the current directory
+      #     git add --all
 
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "Update Helm charts and index.yaml in gh-pages"
-            git push origin gh-pages
-          fi
+      #     if git diff --cached --quiet; then
+      #       echo "No changes to commit."
+      #     else
+      #       git commit -m "Update Helm charts and index.yaml in gh-pages"
+      #       git push origin gh-pages
+      #     fi
 
       # # Step 5: Process each chart release
       # - name: Process each chart release
