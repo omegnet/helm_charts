@@ -81,16 +81,21 @@ jobs:
               fi
           done <<< "$CHARTS"
       
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
+      - name: Publish Helm charts
+        uses: actions/checkout@v2
         with:
-          skip_existing: true
-          packages_with_index: true
-          # charts_dir: packages
-          pages_branch: gh-pages
-          # config: cr.yaml
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      # - name: Run chart-releaser
+      #   uses: helm/chart-releaser-action@v1.6.0
+      #   with:
+      #     skip_existing: true
+      #     packages_with_index: true
+      #     # charts_dir: packages
+      #     pages_branch: gh-pages
+      #     # config: cr.yaml
+      #   env:
+      #     CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       # # Step 5: Commit changes in a new branch
       # - name: Create a new branch and commit changes
