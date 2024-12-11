@@ -14,6 +14,7 @@ fi
 
 # Read the chart_versions.yaml file using yq
 CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+PACKAGES_DIR="./.packages"
 
 # Loop through each chart and process it
 while IFS= read -r CHART_VERSION; do
@@ -24,8 +25,8 @@ while IFS= read -r CHART_VERSION; do
     echo "Upgrading to version: $VERSION"
     if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
         echo "Version $VERSION for $CHART found. Proceeding..."
-         helm pull "$CHART" --version "$VERSION" -d ./.packages
-        # helm repo index . --merge index.yaml
+         helm pull "$CHART" --version "$VERSION" -d "$PACKAGES_DIR"
+         helm repo index "$PACKAGES_DIR" --url https://omegnet.github.io/helm_charts/ 
     else
         echo "Version $VERSION for $CHART not found. Skipping..."
         continue
