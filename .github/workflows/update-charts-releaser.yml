@@ -80,12 +80,7 @@ jobs:
                   continue
               fi
           done <<< "$CHARTS"
-      
-      - name: Publish Helm charts
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          
+          ls -l $PACKAGES_DIR
       # - name: Run chart-releaser
       #   uses: helm/chart-releaser-action@v1.6.0
       #   with:
