@@ -9,3 +9,4 @@ charts:
     version: "1.7.2"
   - chart: "curiedfcharts/nexus"
     version: "1.2.4"
+
