@@ -1,3 +1,4 @@
+charts:
   - chart: "bitnami/nginx"
     version: "11.5.5"
   - chart: "metallb/metallb"

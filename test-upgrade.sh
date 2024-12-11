@@ -13,7 +13,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 # Read the chart_versions.yaml file using yq
-CHARTS=$(yq '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
+CHART_VERSION=$(yq '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
 
 # Loop through each chart and process it
 while IFS= read -r CHART_VERSION; do
