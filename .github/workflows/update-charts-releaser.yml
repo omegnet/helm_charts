@@ -80,13 +80,13 @@ jobs:
               fi
           done <<< "$CHARTS"
       
-
-      - name: Run chart-releaser
+      - name: Install Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         with:
           skip_existing: true
           packages_with_index: true
           charts_dir: packages
+          pages_branch: gh-pages
           # config: cr.yaml
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
