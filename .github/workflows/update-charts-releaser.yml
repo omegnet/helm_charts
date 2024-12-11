@@ -72,8 +72,8 @@ jobs:
                   echo "Version $VERSION for $CHART found. Proceeding..."
                   helm pull "$CHART" --version "$VERSION" --destination ./packages
                   # helm package "./charts/$CHART"
-                  # helm repo index . --url https://github.com/${{ github.repository }}/releases
-                  helm repo index ./packages --merge ./packages/index.yaml
+                  helm repo index ./packages --merge --url https://github.com/${{ github.repository }}/releases
+                  # helm repo index ./packages --merge ./packages/index.yaml
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
@@ -99,6 +99,10 @@ jobs:
           git config --local user.name "GitHub Actions Bot"
           git config --local user.email "actions@github.com"
           git checkout -b update-helm-charts-$(date +'%Y%m%d')
+
+           # Ignore the packages folder
+          echo "packages/" >> .gitignore
+
           git add .
           if git diff --cached --quiet; then
             echo "No changes to commit"
