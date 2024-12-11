@@ -64,7 +64,7 @@ jobs:
           fi
 
           # Read the chart_versions.yaml file using yq
-          CHARTS=$(yq '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
+          CHARTS=$(yq -rc '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
 
           # Loop through each chart and process it
           while IFS= read -r CHART_VERSION; do
