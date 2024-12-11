@@ -22,17 +22,36 @@ while IFS= read -r CHART_VERSION; do
 
     echo "Processing chart: $CHART"
     echo "Upgrading to version: $VERSION"
-
-    # Check if the specified version exists
     if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
         echo "Version $VERSION for $CHART found. Proceeding..."
-        # Uncomment the following lines to perform the actual operations
         helm pull "$CHART" --version "$VERSION"
-        helm repo index . --merge index.yaml
+        # helm repo index . --merge index.yaml
     else
         echo "Version $VERSION for $CHART not found. Skipping..."
         continue
     fi
+    #  # Check if the chart has been updated
+    # if git diff --name-only HEAD^ HEAD | grep -q "charts/$CHART"; then
+    #     echo "Chart $CHART has been updated. Creating release..."
+    #     helm package "./charts/$CHART"
+    #     helm repo index . --url https://github.com/${{ github.repository }}/releases
+
+    #     # Create a new GitHub release
+    #     TAG_NAME="$CHART"  # Use the chart name as the tag
+    #     echo "Creating release for $TAG_NAME..."
+    #     curl -s -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+    #     -H "Accept: application/vnd.github+json" \
+    #     https://api.github.com/repos/${{ github.repository }}/releases \
+    #     -d '{
+    #         "tag_name": "'"$TAG_NAME"'",
+    #         "name": "'"$TAG_NAME"'",
+    #         "body": "Automated release for '"$CHART"'",
+    #         "draft": false,
+    #         "prerelease": false
+    #     }'
+    # else
+    #     echo "No changes detected for $CHART. Skipping release creation."
+    # fi
 done <<< "$CHARTS"
 
 echo "Upgrade test completed."
