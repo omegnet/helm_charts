@@ -81,42 +81,42 @@ jobs:
               fi
           done <<< "$CHARTS"
       
-      # - name: Install Run chart-releaser
-      #   uses: helm/chart-releaser-action@v1.6.0
-      #   with:
-      #     skip_existing: true
-      #     packages_with_index: true
-      #     charts_dir: packages
-      #     pages_branch: gh-pages
-      #     # config: cr.yaml
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          skip_existing: true
+          packages_with_index: true
+          charts_dir: packages
+          pages_branch: gh-pages
+          # config: cr.yaml
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      # # Step 5: Commit changes in a new branch
+      # - name: Create a new branch and commit changes
       #   env:
-      #     CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     git config --local user.name "GitHub Actions Bot"
+      #     git config --local user.email "actions@github.com"
+      #     git checkout -b update-helm-charts-$(date +'%Y%m%d')
 
-      # Step 5: Commit changes in a new branch
-      - name: Create a new branch and commit changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config --local user.name "GitHub Actions Bot"
-          git config --local user.email "actions@github.com"
-          git checkout -b update-helm-charts-$(date +'%Y%m%d')
+      #      # Ignore the packages folder
+      #     echo "packages/" >> .gitignore
 
-           # Ignore the packages folder
-          echo "packages/" >> .gitignore
+      #     git add .
+      #     if git diff --cached --quiet; then
+      #       echo "No changes to commit"
+      #     else
+      #       git commit -m "Update Helm charts and index.html"
+      #     fi
 
-          git add .
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Update Helm charts and index.html"
-          fi
-
-      # Step 6: Push the new branch to the repository
-      - name: Push changes to new branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git push origin HEAD
+      # # Step 6: Push the new branch to the repository
+      # - name: Push changes to new branch
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     git push origin HEAD
 
       # # Step 5: Process each chart release
       # - name: Process each chart release
