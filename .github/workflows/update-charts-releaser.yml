@@ -43,9 +43,9 @@ jobs:
       - name: Upgrade Charts to Specified Versions
         run: |
           set -e
-          # Specify chart versions
           echo "Reading specified chart versions..."
           CONFIG_FILE="./chart-versions.yaml"
+          PACKAGES_DIR="./packages"
 
           # Ensure the configuration file exists
           if [ ! -f "$CONFIG_FILE" ]; then
@@ -57,7 +57,7 @@ jobs:
           CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
           
           # Create the packages directory if it doesn't exist
-          mkdir -p packages
+          mkdir -p $PACKAGES_DIR
 
           # Loop through each chart and process it
           while IFS= read -r CHART_VERSION; do
@@ -70,9 +70,9 @@ jobs:
               # Check if the specified version exists
               if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
                   echo "Version $VERSION for $CHART found. Proceeding..."
-                  helm pull "$CHART" --version "$VERSION" --destination ./packages
+                  helm pull "$CHART" --version "$VERSION" --destination $PACKAGES_DIR
                   # helm package "./charts/$CHART"
-                  helm repo index ./packages --merge --url https://github.com/${{ github.repository }}/releases
+                  helm repo index $PACKAGES_DIR --merge index.yaml --url https://github.com/${{ github.repository }}/releases
                   # helm repo index ./packages --merge ./packages/index.yaml
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
