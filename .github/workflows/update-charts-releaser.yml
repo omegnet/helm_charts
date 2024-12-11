@@ -73,7 +73,7 @@ jobs:
                   helm pull "$CHART" --version "$VERSION" --destination ./packages
                   # helm package "./charts/$CHART"
                   # helm repo index . --url https://github.com/${{ github.repository }}/releases
-                  #helm repo index ./packages --merge ./packages/index.yaml
+                  helm repo index ./packages --merge ./packages/index.yaml
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
