@@ -106,12 +106,12 @@ jobs:
             git commit -m "Update Helm charts and index.html"
           fi
 
-      # # Step 6: Push the new branch to the repository
-      # - name: Push changes to new branch
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     git push origin HEAD
+      # Step 6: Push the new branch to the repository
+      - name: Push changes to new branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push origin HEAD
 
       # # Step 5: Process each chart release
       # - name: Process each chart release
