@@ -39,16 +39,6 @@ jobs:
           helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
           helm repo update
 
-      # - name: Run chart-releaser
-      #   uses: helm/chart-releaser-action@v1.6.0
-      #   with:
-      #     skip_existing: true
-      #     packages_with_index: true
-      #     charts_dir: charts
-      #     # config: cr.yaml
-      #   env:
-      #     CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
       # Step 4: Upgrade Charts to Specified Versions
       - name: Upgrade Charts to Specified Versions
         run: |
@@ -80,7 +70,6 @@ jobs:
               # Check if the specified version exists
               if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
                   echo "Version $VERSION for $CHART found. Proceeding..."
-                  # Uncomment the following lines to perform the actual operations
                   helm pull "$CHART" --version "$VERSION" --destination ./packages
                   # helm package "./charts/$CHART"
                   # helm repo index . --url https://github.com/${{ github.repository }}/releases
@@ -90,6 +79,17 @@ jobs:
                   continue
               fi
           done <<< "$CHARTS"
+      
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          skip_existing: true
+          packages_with_index: true
+          charts_dir: packages
+          # config: cr.yaml
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
       # # Step 5: Commit changes in a new branch
       # - name: Create a new branch and commit changes
