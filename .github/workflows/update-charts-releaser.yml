@@ -86,7 +86,7 @@ jobs:
         with:
           skip_existing: true
           packages_with_index: true
-          charts_dir: packages
+          # charts_dir: packages
           pages_branch: gh-pages
           # config: cr.yaml
         env:
