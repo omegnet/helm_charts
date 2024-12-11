@@ -72,8 +72,8 @@ jobs:
                   echo "Version $VERSION for $CHART found. Proceeding..."
                   helm pull "$CHART" --version "$VERSION" --destination $PACKAGES_DIR
                   # helm package "./charts/$CHART"
-                  helm repo index $PACKAGES_DIR --merge index.yaml --url https://github.com/${{ github.repository }}/releases
-                  # helm repo index ./packages --merge ./packages/index.yaml
+                  # helm repo index $PACKAGES_DIR --merge index.yaml --url https://github.com/${{ github.repository }}/releases
+                  helm repo index $PACKAGES_DIR --merge ./packages/index.yaml --url https://github.com/${{ github.repository }}/releases
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
