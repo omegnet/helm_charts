@@ -1,9 +1,10 @@
 name: Release Charts
 
 on:
-  push:
-    branches:
-      - workflow
+  # push:
+  #   branches:
+  #     - workflow
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   update-helm-charts:
@@ -73,7 +74,7 @@ jobs:
                   helm pull "$CHART" --version "$VERSION" --destination $PACKAGES_DIR
                   # helm package "./charts/$CHART"
                   # helm repo index $PACKAGES_DIR --merge index.yaml --url https://github.com/${{ github.repository }}/releases
-                  helm repo index $PACKAGES_DIR --merge ./packages/index.yaml --url https://github.com/${{ github.repository }}/releases
+                  helm repo index $PACKAGES_DIR --merge $PACKAGES_DIR/index.yaml 
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
