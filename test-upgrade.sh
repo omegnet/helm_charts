@@ -13,7 +13,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
 fi
 
 # Read the chart_versions.yaml file using yq
-CHART_VERSION=$(yq '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
+CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
 
 # Loop through each chart and process it
 while IFS= read -r CHART_VERSION; do
@@ -24,7 +24,7 @@ while IFS= read -r CHART_VERSION; do
     echo "Upgrading to version: $VERSION"
     if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
         echo "Version $VERSION for $CHART found. Proceeding..."
-        helm pull "$CHART" --version "$VERSION"
+         helm pull "$CHART" --version "$VERSION" -d ./.packages
         # helm repo index . --merge index.yaml
     else
         echo "Version $VERSION for $CHART not found. Skipping..."

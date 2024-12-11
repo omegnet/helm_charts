@@ -1,5 +1,5 @@
 charts:
-- chart: "bitnami/nginx"
+- chart: "bitnami/nginx-ingress-controller"
   version: "11.5.5"
 - chart: "metallb/metallb"
   version: "0.14.8"
