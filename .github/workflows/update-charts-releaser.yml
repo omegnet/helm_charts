@@ -27,64 +27,66 @@ jobs:
           chmod +x get_helm.sh
           ./get_helm.sh
 
-      # # Step 3: Add Helm Repositories
-      # - name: Add Helm Repositories
-      #   run: |
-      #     helm repo add bitnami https://charts.bitnami.com/bitnami
-      #     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-      #     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-      #     helm repo add curiedfcharts https://curie-data-factory.github.io/helm-charts
-      #     helm repo add metallb https://metallb.github.io/metallb
-      #     helm repo add longhorn https://charts.longhorn.io
-      #     helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
-      #     helm repo update
+      # Step 3: Add Helm Repositories
+      - name: Add Helm Repositories
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add curiedfcharts https://curie-data-factory.github.io/helm-charts
+          helm repo add metallb https://metallb.github.io/metallb
+          helm repo add longhorn https://charts.longhorn.io
+          helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+          helm repo update
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        with:
-          skip_existing: true
-          packages_with_index: true
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      # - name: Run chart-releaser
+      #   uses: helm/chart-releaser-action@v1.6.0
+      #   with:
+      #     skip_existing: true
+      #     packages_with_index: true
+      #     charts_dir: charts
+      #     # config: cr.yaml
+      #   env:
+      #     CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-      # # Step 4: Upgrade Charts to Specified Versions
-      # - name: Upgrade Charts to Specified Versions
-      #   run: |
-      #     set -e
-      #     # Specify chart versions
-      #     echo "Reading specified chart versions..."
-      #     CONFIG_FILE="./chart-versions.yaml"
+      # Step 4: Upgrade Charts to Specified Versions
+      - name: Upgrade Charts to Specified Versions
+        run: |
+          set -e
+          # Specify chart versions
+          echo "Reading specified chart versions..."
+          CONFIG_FILE="./chart-versions.yaml"
 
-      #     # Ensure the configuration file exists
-      #     if [ ! -f "$CONFIG_FILE" ]; then
-      #         echo "Configuration file $CONFIG_FILE not found! Exiting..."
-      #         exit 1
-      #     fi
+          # Ensure the configuration file exists
+          if [ ! -f "$CONFIG_FILE" ]; then
+              echo "Configuration file $CONFIG_FILE not found! Exiting..."
+              exit 1
+          fi
 
-      #     # Read the chart_versions.yaml file using yq
-      #     CHARTS=$(yq '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
+          # Read the chart_versions.yaml file using yq
+          CHARTS=$(yq '.charts[]' "$CONFIG_FILE" | jq -rc '.chart + " " + .version')
 
-      #     # Loop through each chart and process it
-      #     while IFS= read -r CHART_VERSION; do
-      #         CHART=$(echo "$CHART_VERSION" | awk '{print $1}')  # Chart name
-      #         VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')  # Desired version
+          # Loop through each chart and process it
+          while IFS= read -r CHART_VERSION; do
+              CHART=$(echo "$CHART_VERSION" | awk '{print $1}')  # Chart name
+              VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')  # Desired version
 
-      #         echo "Processing chart: $CHART"
-      #         echo "Upgrading to version: $VERSION"
+              echo "Processing chart: $CHART"
+              echo "Upgrading to version: $VERSION"
 
-      #         # Check if the specified version exists
-      #         if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
-      #             echo "Version $VERSION for $CHART found. Proceeding..."
-      #             # Uncomment the following lines to perform the actual operations
-      #             helm pull "$CHART" --version "$VERSION" --destination ./packages
-      #             # helm package "./charts/$CHART"
-      #             # helm repo index . --url https://github.com/${{ github.repository }}/releases
-      #             helm repo index ./packages --merge ./packages/index.yaml
-      #         else
-      #             echo "Version $VERSION for $CHART not found. Skipping..."
-      #             continue
-      #         fi
-      #     done <<< "$CHARTS"
+              # Check if the specified version exists
+              if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
+                  echo "Version $VERSION for $CHART found. Proceeding..."
+                  # Uncomment the following lines to perform the actual operations
+                  helm pull "$CHART" --version "$VERSION" --destination ./packages
+                  # helm package "./charts/$CHART"
+                  # helm repo index . --url https://github.com/${{ github.repository }}/releases
+                  #helm repo index ./packages --merge ./packages/index.yaml
+              else
+                  echo "Version $VERSION for $CHART not found. Skipping..."
+                  continue
+              fi
+          done <<< "$CHARTS"
 
       # # Step 5: Commit changes in a new branch
       # - name: Create a new branch and commit changes
