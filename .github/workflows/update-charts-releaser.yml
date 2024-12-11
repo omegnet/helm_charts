@@ -65,6 +65,9 @@ jobs:
 
           # Read the chart_versions.yaml file using yq
           CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+          
+          # Create the packages directory if it doesn't exist
+          mkdir -p packages
 
           # Loop through each chart and process it
           while IFS= read -r CHART_VERSION; do
