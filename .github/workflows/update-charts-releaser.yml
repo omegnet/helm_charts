@@ -117,7 +117,7 @@ jobs:
       - name: create pull request
         run: |
           gh pr create \
-          -B main \
+          -B gh-pages \
           --title 'Merge "${{ env.NEW_BRANCH }}" into main' \
           --body 'This pull request updates the specified Helm charts to their desired versions as defined in `chart-versions.yaml`.'
         env:
