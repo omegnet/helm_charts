@@ -95,7 +95,7 @@ jobs:
                   continue
               fi
               # Check repo can be loaded
-              if ! helm repo add cache file://$PACKAGES_DIR/ ; then
+              if ! helm repo add cache file://packages/ ; then
                 echo "New index.yaml file can't be used as a file"
                 exit 1
               else
