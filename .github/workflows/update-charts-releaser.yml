@@ -114,7 +114,7 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: "$NEW_BRANCH"
+          branch: "${{ env.NEW_BRANCH }}"
           base: main
           title: "Update Helm Charts"
           body: |
