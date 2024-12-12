@@ -89,7 +89,7 @@ jobs:
               if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
                   echo "Version $VERSION for $CHART found. Proceeding..."
                   helm pull "$CHART" --version "$VERSION" --destination $PACKAGES_DIR
-                  helm repo index --url "$REPO_URL"
+                  helm repo index --url "$REPO_URL" --meerge helm_charts/index.yaml $PACKAGES_DIR
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
