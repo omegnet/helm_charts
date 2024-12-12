@@ -113,6 +113,11 @@ jobs:
             git commit -m "Update Helm charts and index.yaml"
             git push --set-upstream origin "$NEW_BRANCH"
           fi
+          
+      - name: create pull request
+        run: gh pr create -B base_branch -H branch_to_merge --title 'Merge branch_to_merge into base_branch' --body 'Created by Github action'
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # # Step 6: Create a pull request
       # - name: Create Pull Request
