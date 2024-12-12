@@ -94,10 +94,7 @@ jobs:
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
               fi
-             
-              # Remove the repo
-              helm repo remove cache
-             
+            
               cp $PACKAGES_DIR/index.yaml helm_charts/index.yaml
               
               # Remove chart files
