@@ -1,0 +1,148 @@
+apiVersion: v1
+entries:
+  longhorn:
+  - apiVersion: v1
+    appVersion: v1.7.2
+    created: "2024-12-12T20:42:49.151567502Z"
+    description: Longhorn is a distributed block storage system for Kubernetes.
+    digest: 863c011cdc37dd0ad95595ed52b5ac43ef1394fa6012e607397f86e6b682be6a
+    home: https://github.com/longhorn/longhorn
+    icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/longhorn/icon/color/longhorn-icon-color.png
+    keywords:
+    - longhorn
+    - storage
+    - distributed
+    - block
+    - device
+    - iscsi
+    - nfs
+    kubeVersion: '>=1.21.0-0'
+    maintainers:
+    - email: maintainers@longhorn.io
+      name: Longhorn maintainers
+    name: longhorn
+    sources:
+    - https://github.com/longhorn/longhorn
+    - https://github.com/longhorn/longhorn-engine
+    - https://github.com/longhorn/longhorn-instance-manager
+    - https://github.com/longhorn/longhorn-share-manager
+    - https://github.com/longhorn/longhorn-manager
+    - https://github.com/longhorn/longhorn-ui
+    - https://github.com/longhorn/longhorn-tests
+    - https://github.com/longhorn/backing-image-manager
+    urls:
+    - https://omegnet.github.io/helm_charts/longhorn-1.7.2.tgz
+    version: 1.7.2
+  metallb:
+  - apiVersion: v2
+    appVersion: v0.14.8
+    created: "2024-12-12T20:42:49.153639496Z"
+    dependencies:
+    - condition: crds.enabled
+      name: crds
+      repository: ""
+      version: 0.14.8
+    - condition: frrk8s.enabled
+      name: frr-k8s
+      repository: https://metallb.github.io/frr-k8s
+      version: 0.0.14
+    description: A network load-balancer implementation for Kubernetes using standard
+      routing protocols
+    digest: 9049735178558ce096e34eb723fa6d05d9efc8b275dcc1aa6f0f05cc8f905f8a
+    home: https://metallb.universe.tf
+    icon: https://metallb.universe.tf/images/logo/metallb-white.png
+    kubeVersion: '>= 1.19.0-0'
+    name: metallb
+    sources:
+    - https://github.com/metallb/metallb
+    type: application
+    urls:
+    - https://omegnet.github.io/helm_charts/metallb-0.14.8.tgz
+    version: 0.14.8
+  nexus:
+  - annotations:
+      artifacthub.io/images: |
+        - name: nexus
+          image: sonatype/nexus3:3.38.0
+    apiVersion: v2
+    appVersion: 3.38.0
+    created: "2024-12-12T20:42:49.154088251Z"
+    description: Sonatype Nexus is an open source repository manager
+    digest: 4b450bb758317fa8c445e7bfc71d6ecde6bcd341e57679da8355b3eb7a757264
+    home: https://github.com/curie-data-factory/helm-charts/tree/master/charts/nexus
+    icon: https://help.sonatype.com/docs/files/331022/34537964/3/1564671303641/NexusRepo_Icon.png
+    keywords:
+    - nexus
+    - registry
+    kubeVersion: '>= 1.14.0-0'
+    maintainers:
+    - email: armand.leopold@curie.fr
+      name: armandleopold
+    name: nexus
+    sources:
+    - https://github.com/sonatype/nexus-public
+    type: application
+    urls:
+    - https://omegnet.github.io/helm_charts/nexus-1.2.4.tgz
+    version: 1.2.4
+  nfs-subdir-external-provisioner:
+  - apiVersion: v1
+    appVersion: 4.0.2
+    created: "2024-12-12T20:42:49.155201762Z"
+    description: nfs-subdir-external-provisioner is an automatic provisioner that
+      used your *already configured* NFS server, automatically creating Persistent
+      Volumes.
+    digest: a842163c1f5eedc4893e1f685e4249b0ddd62533c3c941228ee6a096ac308f6f
+    home: https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
+    keywords:
+    - nfs
+    - storage
+    - provisioner
+    kubeVersion: '>=1.9.0-0'
+    name: nfs-subdir-external-provisioner
+    sources:
+    - https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
+    urls:
+    - https://omegnet.github.io/helm_charts/nfs-subdir-external-provisioner-4.0.18.tgz
+    version: 4.0.18
+  nginx-ingress-controller:
+  - annotations:
+      category: Infrastructure
+      images: |
+        - name: nginx
+          image: docker.io/bitnami/nginx:1.27.3-debian-12-r0
+        - name: nginx-ingress-controller
+          image: docker.io/bitnami/nginx-ingress-controller:1.11.3-debian-12-r6
+      licenses: Apache-2.0
+    apiVersion: v2
+    appVersion: 1.11.3
+    created: "2024-12-12T20:42:49.15800696Z"
+    dependencies:
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: NGINX Ingress Controller is an Ingress controller that manages external
+      access to HTTP services in a Kubernetes cluster using NGINX.
+    digest: 8da9adfd19b1cac8d13a9f24ccc927c5a062c91743e226c721ad303dd77eae48
+    home: https://bitnami.com
+    icon: https://bitnami.com/assets/stacks/nginx-ingress-controller/img/nginx-ingress-controller-stack-220x234.png
+    keywords:
+    - ingress
+    - nginx
+    - http
+    - web
+    - www
+    - reverse proxy
+    kubeVersion: '>= 1.20.0-0'
+    maintainers:
+    - name: Broadcom, Inc. All Rights Reserved.
+      url: https://github.com/bitnami/charts
+    name: nginx-ingress-controller
+    sources:
+    - https://github.com/bitnami/charts/tree/main/bitnami/nginx-ingress-controller
+    urls:
+    - https://omegnet.github.io/helm_charts/nginx-ingress-controller-11.5.5.tgz
+    version: 11.5.5
+generated: "2024-12-12T20:42:49.149204797Z"
