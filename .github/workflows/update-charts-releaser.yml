@@ -23,7 +23,8 @@ jobs:
 
       - name: Create a new branch
         run: |
-          export NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')"
+          RANDOM_STRING=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+          export NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')-$RANDOM_STRING"
           echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
           git checkout -b "$NEW_BRANCH"
 
