@@ -89,13 +89,21 @@ jobs:
               if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
                   echo "Version $VERSION for $CHART found. Proceeding..."
                   helm pull "$CHART" --version "$VERSION" --destination $PACKAGES_DIR
-                  helm repo index $PACKAGES_DIR --url "$REPO_URL"
+                  helm repo index --url "$REPO_URL"
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
               fi
+              # Check repo can be loaded
+              if ! helm repo add cache file://.$PACKAGES_DIR/ ; then
+                echo "New index.yaml file can't be used as a file"
+                exit 1
+              else
+                # Remove the repo
+                helm repo remove cache
+              fi
+              cp $PACKAGES_DIR/index.yaml helm_charts/index.yaml
           done <<< "$CHARTS"
-          ls -l $PACKAGES_DIR
 
        # Step 5: Commit changes to the new branch
       - name: Commit changes
@@ -105,14 +113,18 @@ jobs:
           git config --local user.name "GitHub Actions Bot"
           git config --local user.email "actions@github.com"
           
+          # Avoid overriding index branch when remote commit does not match our checkout commit
+          current_commit_id=$(git rev-parse index)
+
           # Stage all changes
-          git add -A
+          git add helm_charts/index.yaml
           
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
             git commit -m "Update Helm charts and index.yaml"
-            git push --set-upstream origin "$NEW_BRANCH"
+            git push origin index --force-with-lease=index:${current_commit_id}
+            # git push --set-upstream origin "$NEW_BRANCH"
           fi
 
       - name: create pull request
