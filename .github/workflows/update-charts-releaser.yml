@@ -103,12 +103,15 @@ jobs:
         run: |
           git config --local user.name "GitHub Actions Bot"
           git config --local user.email "actions@github.com"
-          git add .
+          
+          # Stage all changes
+          git add -A
+          
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
             git commit -m "Update Helm charts and index.yaml"
-            git push origin "$NEW_BRANCH"
+            git push --set-upstream origin "$NEW_BRANCH"
           fi
 
       # Step 6: Create a pull request
