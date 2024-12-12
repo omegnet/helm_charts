@@ -10,16 +10,22 @@ jobs:
   update-helm-charts:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout repository
+      # Step 1: Checkout repository and pull latest changes from main
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
-      - name: Configure Git
+
+      - name: Pull latest changes from main
         run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git pull origin main
+
+      - name: Create a new branch
+        run: |
+          NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')"
+          git checkout -b "$NEW_BRANCH"
 
       # Step 2: Install Helm
       - name: Install Helm
@@ -73,66 +79,63 @@ jobs:
               if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
                   echo "Version $VERSION for $CHART found. Proceeding..."
                   helm pull "$CHART" --version "$VERSION" --destination $PACKAGES_DIR
-                  # helm package "./charts/$CHART"
-                  echo "helm repo index $PACKAGES_DIR --merge index.yaml --url https://github.com/${{ github.repository }}/releases"
                   helm repo index $PACKAGES_DIR --url "$REPO_URL"
-                  # helm repo index "$PACKAGES_DIR" --url "$REPO_URL" 
               else
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
               fi
           done <<< "$CHARTS"
           ls -l $PACKAGES_DIR
-      # - name: Run chart-releaser
-      #   uses: helm/chart-releaser-action@v1.6.0
-      #   with:
-      #     skip_existing: true
-      #     packages_with_index: true
-      #     # charts_dir: packages
-      #     pages_branch: gh-pages
-      #     # config: cr.yaml
-      #   env:
-      #     CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-      # Step 5: Commit changes in a new branch
-      - name: Create a new branch and commit changes
+      # Step 5: Commit changes to the new branch
+      - name: Commit changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.name "GitHub Actions Bot"
           git config --local user.email "actions@github.com"
-          git checkout -b update-helm-charts-$(date +'%Y%m%d')
-
-           # Ignore the packages folder
-          echo "packages/" >> .gitignore
-
           git add .
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No changes to commit."
           else
-            git commit -m "Update Helm charts and index.html"
+            git commit -m "Update Helm charts and index.yaml"
+            git push origin "$NEW_BRANCH"
           fi
 
-      # Step 6: Push the new branch to the repository
-      # - name: Push changes to gh-pages
+      # Step 6: Create a pull request
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: "$NEW_BRANCH"
+          base: main
+          title: "Update Helm Charts"
+          body: |
+            This pull request updates the specified Helm charts to their desired versions as defined in `chart-versions.yaml`.
+          labels: |
+            helm
+            automation
+            charts
+
+
+
+      # # Step 5: Commit changes in a new branch
+      # - name: Create a new branch and commit changes
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #   run: |
       #     git config --local user.name "GitHub Actions Bot"
       #     git config --local user.email "actions@github.com"
-      #     git fetch origin gh-pages
-      #     git checkout gh-pages || git checkout --orphan gh-pages # Use the branch or create it if it doesn't exist
-      #     git reset --mixed origin/gh-pages || echo "No remote branch gh-pages yet. Creating one."
-          
-      #     # Ensure the necessary files (e.g., `index.yaml`) are in the working directory
-      #     # This assumes `index.yaml` and/or packages are already in the current directory
-      #     git add --all
+      #     git checkout -b update-helm-charts-$(date +'%Y%m%d')
 
+      #      # Ignore the packages folder
+      #     echo "packages/" >> .gitignore
+
+      #     git add .
       #     if git diff --cached --quiet; then
-      #       echo "No changes to commit."
+      #       echo "No changes to commit"
       #     else
-      #       git commit -m "Update Helm charts and index.yaml in gh-pages"
-      #       git push origin gh-pages
+      #       git commit -m "Update Helm charts and index.html"
       #     fi
 
       # # Step 5: Process each chart release
