@@ -1,9 +1,10 @@
 name: Release Charts
 
 on:
-  push:
-    branches:
-      - workflow
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   update-helm-charts:
@@ -28,12 +29,12 @@ jobs:
           echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
           git checkout -b "$NEW_BRANCH"
 
-      - name: Pull chart-versions.yaml from workflow branch
-        run: |
-          WORKFLOW_BRANCH="workflow"
-          git fetch origin "$WORKFLOW_BRANCH"
-          git checkout "$WORKFLOW_BRANCH" -- chart-versions.yaml
-          git reset HEAD chart-versions.yaml  # Ensure it's not staged yet
+      # - name: Pull chart-versions.yaml from workflow branch
+      #   run: |
+      #     WORKFLOW_BRANCH="workflow"
+      #     git fetch origin "$WORKFLOW_BRANCH"
+      #     git checkout "$WORKFLOW_BRANCH" -- chart-versions.yaml
+      #     git reset HEAD chart-versions.yaml  # Ensure it's not staged yet
 
       # Step 2: Install Helm
       - name: Install Helm
