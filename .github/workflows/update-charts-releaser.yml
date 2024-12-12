@@ -108,18 +108,14 @@ jobs:
           git config --local user.name "GitHub Actions Bot"
           git config --local user.email "actions@github.com"
           
-          # Avoid overriding index branch when remote commit does not match our checkout commit
-          current_commit_id=$(git rev-parse index)
-
-          # Stage all changes
-          git add helm_charts/index.yaml
+          # Stage 
+          git add ./index.yaml
           
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
             git commit -m "Update Helm charts and index.yaml"
-            git push origin index --force-with-lease=index:${current_commit_id}
-            # git push --set-upstream origin "$NEW_BRANCH"
+            git push --set-upstream origin "$NEW_BRANCH"
           fi
 
       - name: create pull request
