@@ -114,20 +114,20 @@ jobs:
             git push --set-upstream origin "$NEW_BRANCH"
           fi
 
-      # Step 6: Create a pull request
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: "${{ env.NEW_BRANCH }}"
-          base: main
-          title: "Update Helm Charts"
-          body: |
-            This pull request updates the specified Helm charts to their desired versions as defined in `chart-versions.yaml`.
-          labels: |
-            helm
-            automation
-            charts
+      # # Step 6: Create a pull request
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v5
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     branch: "${{ env.NEW_BRANCH }}"
+      #     base: main
+      #     title: "Update Helm Charts"
+      #     body: |
+      #       This pull request updates the specified Helm charts to their desired versions as defined in `chart-versions.yaml`.
+      #     labels: |
+      #       helm
+      #       automation
+      #       charts
 
 
 
