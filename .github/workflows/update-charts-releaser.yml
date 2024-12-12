@@ -23,7 +23,8 @@ jobs:
 
       - name: Create a new branch
         run: |
-          NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')"
+          export NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')"
+          echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
           git checkout -b "$NEW_BRANCH"
 
       - name: Pull chart-versions.yaml from workflow branch
@@ -93,7 +94,7 @@ jobs:
           done <<< "$CHARTS"
           ls -l $PACKAGES_DIR
 
-      # Step 5: Commit changes to the new branch
+       # Step 5: Commit changes to the new branch
       - name: Commit changes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
