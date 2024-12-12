@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - workflow
-  # workflow_dispatch: # Allows manual trigger
 
 jobs:
   update-helm-charts:
@@ -26,6 +25,13 @@ jobs:
         run: |
           NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')"
           git checkout -b "$NEW_BRANCH"
+
+      - name: Pull chart-versions.yaml from workflow branch
+        run: |
+          WORKFLOW_BRANCH="workflow"
+          git fetch origin "$WORKFLOW_BRANCH"
+          git checkout "$WORKFLOW_BRANCH" -- chart-versions.yaml
+          git reset HEAD chart-versions.yaml  # Ensure it's not staged yet
 
       # Step 2: Install Helm
       - name: Install Helm
@@ -51,7 +57,7 @@ jobs:
         run: |
           set -e
           echo "Reading specified chart versions..."
-          CONFIG_FILE="chart-versions.yaml"
+          CONFIG_FILE="./chart-versions.yaml"
           PACKAGES_DIR="./packages"
           REPO_URL="https://omegnet.github.io/helm_charts/"
 
