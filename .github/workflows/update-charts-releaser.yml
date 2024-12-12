@@ -94,12 +94,11 @@ jobs:
                   echo "Version $VERSION for $CHART not found. Skipping..."
                   continue
               fi
-            
-              cp $PACKAGES_DIR/index.yaml helm_charts/index.yaml
-              
-              # Remove chart files
-              rm -rf $PACKAGES_DIR
           done <<< "$CHARTS"
+          cp $PACKAGES_DIR/index.yaml ./index.yaml
+              
+          # Remove chart files
+          rm -rf $PACKAGES_DIR
 
        # Step 5: Commit changes to the new branch
       - name: Commit changes
