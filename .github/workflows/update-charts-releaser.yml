@@ -15,12 +15,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: gh-pages
 
       - name: Pull latest changes from main
         run: |
-          git fetch origin main
-          git checkout main
-          git pull origin main
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git pull origin gh-pages
 
       - name: Create a new branch
         run: |
@@ -118,7 +119,7 @@ jobs:
         run: |
           gh pr create \
           -B gh-pages \
-          --title 'Merge "${{ env.NEW_BRANCH }}" into main' \
+          --title 'Merge "${{ env.NEW_BRANCH }}" into gh-pages' \
           --body 'This pull request updates the specified Helm charts to their desired versions as defined in `chart-versions.yaml`.'
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
