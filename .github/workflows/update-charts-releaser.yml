@@ -51,7 +51,7 @@ jobs:
         run: |
           set -e
           echo "Reading specified chart versions..."
-          CONFIG_FILE="./chart-versions.yaml"
+          CONFIG_FILE="chart-versions.yaml"
           PACKAGES_DIR="./packages"
           REPO_URL="https://omegnet.github.io/helm_charts/"
 
