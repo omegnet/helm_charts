@@ -105,7 +105,7 @@ jobs:
             # Compare versions
             if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
                 echo "Updating $CHART_NAME from version $CURRENT_VERSION to $LATEST_VERSION..."
-                helm pull $CHART --version $LATEST_VERSION --untar -d $CHART_PATH
+                # helm pull $CHART --version $LATEST_VERSION --untar -d $CHART_PATH
                 sed -i "s/^version:.*/version: $LATEST_VERSION/" "$CHART_PATH/Chart.yaml"
             fi
           done
