@@ -74,39 +74,40 @@ jobs:
           mkdir -p $PACKAGES_DIR
 
           for CHART_PATH in $(find $CHARTS_DIR -type f -name "Chart.yaml" -exec dirname {} \;); do
-          CHART_NAME=$(basename $CHART_PATH)
-          echo "Processing chart: $CHART_NAME"
+            CHART_NAME=$(basename $CHART_PATH)
+            echo "Processing chart: $CHART_NAME"
 
-          # Get the current version of the chart
-          CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
-          echo "Current version: $CURRENT_VERSION"
+            # Get the current version of the chart
+            CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
+            echo "Current version: $CURRENT_VERSION"
 
-          # Read the chart_versions.yaml file using yq
-          LATEST_CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+            # Read the chart_versions.yaml file using yq
+            LATEST_CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
 
-          CHART=$(echo "$LATEST_CHARTS" |grep $CHART_NAME | awk '{print $1}')  # Chart name
-          VERSION=$(echo "$LATEST_CHARTS" |grep $CHART_NAME | awk '{print $2}')  # Desired version
+            CHART=$(echo "$LATEST_CHARTS" |grep $CHART_NAME | awk '{print $1}')  # Chart name
+            VERSION=$(echo "$LATEST_CHARTS" |grep $CHART_NAME | awk '{print $2}')  # Desired version
 
-          if [[ -z "$VERSION" ]]; then
-              echo "No new version defined for $CHART_NAME. Skipping."
-              continue
-          else
-              echo "Found a new chart version for: $CHART"
-              echo "latest chart version: $VERSION"
+            if [[ -z "$VERSION" ]]; then
+                echo "No new version defined for $CHART_NAME. Skipping."
+                continue
+            else
+                echo "Found a new chart version for: $CHART"
+                echo "latest chart version: $VERSION"
 
-              # Get the latest version from the public repo
-              LATEST_VERSION=$(helm search repo $CHART --version $VERSION |grep $CHART | awk 'NR==1 {print $2}')
-              if [ -z "$LATEST_VERSION" ]; then
-                  echo "$CHART_NAME is already up to date. Skipping."
-                  continue
-              fi
-          fi
+                # Get the latest version from the public repo
+                LATEST_VERSION=$(helm search repo $CHART --version $VERSION |grep $CHART | awk 'NR==1 {print $2}')
+                if [ -z "$LATEST_VERSION" ]; then
+                    echo "$CHART_NAME is already up to date. Skipping."
+                    continue
+                fi
+            fi
 
-          # Compare versions
-          if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
-              echo "Updating $CHART_NAME from version $CURRENT_VERSION to $LATEST_VERSION..."
-              helm pull $CHART --version $LATEST_VERSION --untar -d $CHART_PATH
-              sed -i "s/^version:.*/version: $LATEST_VERSION/" "$CHART_PATH/Chart.yaml"
+            # Compare versions
+            if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+                echo "Updating $CHART_NAME from version $CURRENT_VERSION to $LATEST_VERSION..."
+                helm pull $CHART --version $LATEST_VERSION --untar -d $CHART_PATH
+                sed -i "s/^version:.*/version: $LATEST_VERSION/" "$CHART_PATH/Chart.yaml"
+            fi
           done
 
       # Step 2: Configure Git
