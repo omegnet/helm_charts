@@ -16,59 +16,162 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: gh-pages
+      
+      - name: Pull latest changes from gh-pages
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git pull origin gh-pages
+
+      - name: Create a new branch
+        run: |
+          RANDOM_STRING=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+          export NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')-$RANDOM_STRING"
+          echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
+          git checkout -b "$NEW_BRANCH"
+      
+      # Step 2: Install Helm
+      - name: Install Helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod +x get_helm.sh
+          ./get_helm.sh
+
+      # Step 3: Add Helm Repositories
+      - name: Add Helm Repositories
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add curiedfcharts https://curie-data-factory.github.io/helm-charts
+          helm repo add metallb https://metallb.github.io/metallb
+          helm repo add longhorn https://charts.longhorn.io
+          helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+          helm repo add jenkins https://charts.jenkins.io
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add hashicorp https://helm.releases.hashicorp.com
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+          helm repo update
+      
+      - name: Get the desired Helm Charts
+        run: |
+          set -e
+          echo "Reading specified chart versions..."
+          CHARTS_DIR="./charts"
+          CONFIG_FILE="./chart-versions.yaml"
+          PACKAGES_DIR="./packages"
+          REPO_URL="https://omegnet.github.io/helm_charts/"
+
+          # Ensure the configuration file exists
+          if [ ! -f "$CONFIG_FILE" ]; then
+              echo "Configuration file $CONFIG_FILE not found! Exiting..."
+              exit 1
+          fi
+
+           # Create the packages directory if it doesn't exist
+          mkdir -p $PACKAGES_DIR
+
+          for CHART_PATH in $(find $CHARTS_DIR -type f -name "Chart.yaml" -exec dirname {} \;); do
+          CHART_NAME=$(basename $CHART_PATH)
+          echo "Processing chart: $CHART_NAME"
+
+          # Get the current version of the chart
+          CURRENT_VERSION=$(grep "^version:" "$CHART_PATH/Chart.yaml" | awk '{print $2}')
+          echo "Current version: $CURRENT_VERSION"
+
+          # Read the chart_versions.yaml file using yq
+          LATEST_CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+
+          CHART=$(echo "$LATEST_CHARTS" |grep $CHART_NAME | awk '{print $1}')  # Chart name
+          VERSION=$(echo "$LATEST_CHARTS" |grep $CHART_NAME | awk '{print $2}')  # Desired version
+
+          if [[ -z "$VERSION" ]]; then
+              echo "No new version defined for $CHART_NAME. Skipping."
+              continue
+          else
+              echo "Found a new chart version for: $CHART"
+              echo "latest chart version: $VERSION"
+
+              # Get the latest version from the public repo
+              LATEST_VERSION=$(helm search repo $CHART --version $VERSION |grep $CHART | awk 'NR==1 {print $2}')
+              if [ -z "$LATEST_VERSION" ]; then
+                  echo "$CHART_NAME is already up to date. Skipping."
+                  continue
+              fi
+          fi
+
+          # Compare versions
+          if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+              echo "Updating $CHART_NAME from version $CURRENT_VERSION to $LATEST_VERSION..."
+              helm pull $CHART --version $LATEST_VERSION --untar -d $CHART_PATH
+              sed -i "s/^version:.*/version: $LATEST_VERSION/" "$CHART_PATH/Chart.yaml"
+          done
 
       # Step 2: Configure Git
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+      
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.6.0
+        with:
+          skip_existing: true
+          packages_with_index: true
+          charts_dir: charts
+          pages_branch: gh-pages
+          # config: cr.yaml
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
-      # Step 3: Get Chart Versions
-      - name: Get Chart Versions
-        id: get_chart_versions
-        run: echo "chart_list=$(ls charts | tr '\n' ',')" >> $GITHUB_ENV  # Store chart versions in environment variable
+      # # Step 3: Get Chart Versions
+      # - name: Get Chart Versions
+      #   id: get_chart_versions
+      #   run: echo "chart_list=$(ls charts | tr '\n' ',')" >> $GITHUB_ENV  # Store chart versions in environment variable
 
-      # Step 4: Validate each chart before release
-      - name: Validate Helm Charts
-        run: |
-          IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
-          for CHART in "${CHARTS[@]}"; do
-              echo "Linting chart $CHART..."
-              helm lint ./charts/$CHART || exit 1
-          done
+      # # Step 4: Validate each chart before release
+      # - name: Validate Helm Charts
+      #   run: |
+      #     IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
+      #     for CHART in "${CHARTS[@]}"; do
+      #         echo "Linting chart $CHART..."
+      #         helm lint ./charts/$CHART || exit 1
+      #     done
 
-      # Step 5: Loop through each chart version
-      - name: Process each chart release
-        run: |
-          set -e  # Exit on any error
-          IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
-          for CHART in "${CHARTS[@]}"; do
-            echo "Processing $CHART..."
+      # # Step 5: Loop through each chart version
+      # - name: Process each chart release
+      #   run: |
+      #     set -e  # Exit on any error
+      #     IFS=',' read -ra CHARTS <<< "${{ env.chart_list }}"  # Split the chart_list into an array
+      #     for CHART in "${CHARTS[@]}"; do
+      #       echo "Processing $CHART..."
 
-            # Check if the release exists
-            RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/${{ github.repository }}/releases/tags/$CHART)
+      #       # Check if the release exists
+      #       RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #         -H "Accept: application/vnd.github+json" \
+      #         https://api.github.com/repos/${{ github.repository }}/releases/tags/$CHART)
 
-            if echo "$RELEASE" | grep -q '"id":'; then
-              echo "Release $CHART already exists. Skipping..."
-              continue
-            fi
+      #       if echo "$RELEASE" | grep -q '"id":'; then
+      #         echo "Release $CHART already exists. Skipping..."
+      #         continue
+      #       fi
 
-            # Run chart-releaser for new release
-            helm package ./charts/$CHART
-            helm repo index . --url https://github.com/${{ github.repository }}/releases
+      #       # Run chart-releaser for new release
+      #       helm package ./charts/$CHART
+      #       helm repo index . --url https://github.com/${{ github.repository }}/releases
 
-            # Create GitHub Release
-            echo "Creating release for $CHART..."
-            curl -s -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-              -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/${{ github.repository }}/releases \
-              -d '{
-                "tag_name": "'"$CHART"'",
-                "name": "'"$CHART"'",
-                "body": "Automated release for '"$CHART"'",
-                "draft": false,
-                "prerelease": false
-              }'
-          done
+      #       # Create GitHub Release
+      #       echo "Creating release for $CHART..."
+      #       curl -s -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #         -H "Accept: application/vnd.github+json" \
+      #         https://api.github.com/repos/${{ github.repository }}/releases \
+      #         -d '{
+      #           "tag_name": "'"$CHART"'",
+      #           "name": "'"$CHART"'",
+      #           "body": "Automated release for '"$CHART"'",
+      #           "draft": false,
+      #           "prerelease": false
+      #         }'
+      #     done
