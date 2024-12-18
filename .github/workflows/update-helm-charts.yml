@@ -1,58 +1,58 @@
-name: Update Helm Charts
+# name: Update Helm Charts
 
 # on:
 #   push:
 #     branches:
 #       - workflow
-  # schedule:
-  #   - cron: '0 0 * * 0' # Runs weekly at midnight on Sundays
-  workflow_dispatch: # Allows manual trigger
+#   # schedule:
+#   #   - cron: '0 0 * * 0' # Runs weekly at midnight on Sundays
+#   workflow_dispatch: # Allows manual trigger
 
-jobs:
-  update-helm-charts:
-    runs-on: ubuntu-latest
+# jobs:
+#   update-helm-charts:
+#     runs-on: ubuntu-latest
 
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+#     steps:
+#       # Step 1: Checkout the repository
+#       - name: Checkout repository
+#         uses: actions/checkout@v3
 
-      # Step 2: Setup Helm CLI
-      - name: Install Helm
-        run: |
-          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-          chmod +x get_helm.sh
-          ./get_helm.sh
+#       # Step 2: Setup Helm CLI
+#       - name: Install Helm
+#         run: |
+#           curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+#           chmod +x get_helm.sh
+#           ./get_helm.sh
 
-      # Step 3: Update Helm dependencies
-      - name: Update Helm dependencies
-        run: |
-          for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
-            echo "Updating dependencies for $dir"
-            helm dependency update $dir || echo "No dependencies to update for $dir"
-          done
-      # Step 4: Lint and validate Helm charts
-      - name: Lint and validate Helm charts
-        run: |
-          for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
-            helm lint $dir || exit 1
-          done
+#       # Step 3: Update Helm dependencies
+#       - name: Update Helm dependencies
+#         run: |
+#           for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
+#             echo "Updating dependencies for $dir"
+#             helm dependency update $dir || echo "No dependencies to update for $dir"
+#           done
+#       # Step 4: Lint and validate Helm charts
+#       - name: Lint and validate Helm charts
+#         run: |
+#           for dir in $(find . -type f -name "Chart.yaml" -exec dirname {} \;); do
+#             helm lint $dir || exit 1
+#           done
 
-      # Step 5: Commit changes if any
-      - name: Commit changes
-        run: |
-          git config --local user.name "GitHub Actions Bot"
-          git config --local user.email "actions@github.com"
-          git add .
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Automated update of Helm chart dependencies"
-          fi
+#       # Step 5: Commit changes if any
+#       - name: Commit changes
+#         run: |
+#           git config --local user.name "GitHub Actions Bot"
+#           git config --local user.email "actions@github.com"
+#           git add .
+#           if git diff --cached --quiet; then
+#             echo "No changes to commit"
+#           else
+#             git commit -m "Automated update of Helm chart dependencies"
+#           fi
 
-      # Step 6: Push changes back to the repository
-      - name: Push changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git push
+#       # Step 6: Push changes back to the repository
+#       - name: Push changes
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         run: |
+#           git push
