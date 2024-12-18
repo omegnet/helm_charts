@@ -91,7 +91,7 @@ jobs:
                 echo "No new version defined for $CHART_NAME. Skipping."
                 continue
             else
-                echo "Found a new chart version for: $CHART"
+                echo "Found a new chart version for: $CHART_NAME"
                 echo "latest chart version: $VERSION"
 
                 # Get the latest version from the public repo
@@ -105,7 +105,10 @@ jobs:
             # Compare versions
             if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
                 echo "Updating $CHART_NAME from version $CURRENT_VERSION to $LATEST_VERSION..."
-                helm pull $CHART --version $LATEST_VERSION --untar -d $CHARTS_DIR
+                if [ -d "$CHART_PATH" ]; then
+                    rm -rf $CHARTS_DIR/$CHART_NAME
+                    helm pull "$CHART" --version "$LATEST_VERSION" --untar -d $CHARTS_DIR
+                fi
             fi
           done
 
