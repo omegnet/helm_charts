@@ -11,11 +11,20 @@ metadata:
   namespace: {{ template "jenkins.namespace" . }}
   labels:
     "app.kubernetes.io/name": '{{ template "jenkins.name" .}}'
-    "helm.sh/chart": "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    {{- if .Values.renderHelmLabels }}
+    "helm.sh/chart": "{{ template "jenkins.label" .}}"
+    {{- end }}
     "app.kubernetes.io/managed-by": "{{ .Release.Service }}"
     "app.kubernetes.io/instance": "{{ .Release.Name }}"
-    "app.kubernetes.io/component": "{{ .Values.master.componentName }}"
+    "app.kubernetes.io/component": "{{ .Values.controller.componentName }}"
+{{- if .Values.persistence.labels }}
+{{ toYaml .Values.persistence.labels | indent 4 }}
+{{- end }}
 spec:
+{{- if .Values.persistence.dataSource }}
+  dataSource:
+{{ toYaml .Values.persistence.dataSource | indent 4 }}
+{{- end }}
   accessModes:
     - {{ .Values.persistence.accessMode | quote }}
   resources:
@@ -25,7 +34,7 @@ spec:
 {{- if (eq "-" .Values.persistence.storageClass) }}
   storageClassName: ""
 {{- else }}
-  storageClassName: "{{ .Values.persistence.storageClass }}"
+  storageClassName: "{{ tpl .Values.persistence.storageClass . }}"
 {{- end }}
 {{- end }}
 {{- end }}
