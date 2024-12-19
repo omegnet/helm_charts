@@ -1,0 +1,210 @@
+name: Release Charts
+
+on:
+  push:
+    branches:
+      - main
+  # workflow_dispatch: # Allows manual trigger
+
+jobs:
+  update-helm-charts:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout repository and pull latest changes from main
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # ref: gh-pages
+
+      - name: Pull latest changes from main
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git pull origin gh-pages
+
+      - name: Create a new branch
+        run: |
+          RANDOM_STRING=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+          export NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')-$RANDOM_STRING"
+          echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
+          git checkout -b "$NEW_BRANCH"
+
+      # - name: Pull chart-versions.yaml from workflow branch
+      #   run: |
+      #     WORKFLOW_BRANCH="workflow"
+      #     git fetch origin "$WORKFLOW_BRANCH"
+      #     git checkout "$WORKFLOW_BRANCH" -- chart-versions.yaml
+      #     git reset HEAD chart-versions.yaml  # Ensure it's not staged yet
+
+      # Step 2: Install Helm
+      - name: Install Helm
+        run: |
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+          chmod +x get_helm.sh
+          ./get_helm.sh
+
+      # Step 3: Add Helm Repositories
+      - name: Add Helm Repositories
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add curiedfcharts https://curie-data-factory.github.io/helm-charts
+          helm repo add metallb https://metallb.github.io/metallb
+          helm repo add longhorn https://charts.longhorn.io
+          helm repo add nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+          helm repo add jenkins https://charts.jenkins.io
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add hashicorp https://helm.releases.hashicorp.com
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo add metrics-server https://kubernetes-sigs.github.io/metrics-server/
+          helm repo update
+
+      # Step 4: Upgrade Charts to Specified Versions
+      - name: Upgrade Charts to Specified Versions
+        run: |
+          set -e
+          echo "Reading specified chart versions..."
+          CONFIG_FILE="./chart-versions.yaml"
+          PACKAGES_DIR="./packages"
+          REPO_URL="https://omegnet.github.io/helm_charts/"
+
+          # Ensure the configuration file exists
+          if [ ! -f "$CONFIG_FILE" ]; then
+              echo "Configuration file $CONFIG_FILE not found! Exiting..."
+              exit 1
+          fi
+
+          # Read the chart_versions.yaml file using yq
+          CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+          
+          # Create the packages directory if it doesn't exist
+          mkdir -p $PACKAGES_DIR
+
+          # Loop through each chart and process it
+          while IFS= read -r CHART_VERSION; do
+              CHART=$(echo "$CHART_VERSION" | awk '{print $1}')  # Chart name
+              VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')  # Desired version
+
+              echo "Processing chart: $CHART"
+              echo "Upgrading to version: $VERSION"
+
+              # Check if the specified version exists
+              if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
+                  echo "Version $VERSION for $CHART found. Proceeding..."
+                  helm pull "$CHART" --version "$VERSION" --destination $PACKAGES_DIR
+                  helm repo index --url https://github.com/${{ github.repository }}/releases --merge helm_charts/index.yaml $PACKAGES_DIR
+              else
+                  echo "Version $VERSION for $CHART not found. Skipping..."
+                  continue
+              fi
+          done <<< "$CHARTS"
+          cp $PACKAGES_DIR/index.yaml ./index.yaml
+              
+          # Remove chart files
+          rm -rf $PACKAGES_DIR
+
+       # Step 5: Commit changes to the new branch
+      - name: Commit changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --local user.name "GitHub Actions Bot"
+          git config --local user.email "actions@github.com"
+          
+          # Stage 
+          git add ./index.yaml
+          
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Update Helm charts and index.yaml"
+            git push --set-upstream origin "$NEW_BRANCH"
+          fi
+
+      - name: create pull request
+        run: |
+          gh pr create \
+          -B gh-pages \
+          --title 'Merge "${{ env.NEW_BRANCH }}" into gh-pages' \
+          --body 'This pull request updates the specified Helm charts to their desired versions as defined in `chart-versions.yaml`.'
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # # Step 6: Create a pull request
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v5
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     branch: "${{ env.NEW_BRANCH }}"
+      #     base: main
+      #     title: "Update Helm Charts"
+      #     body: |
+      #       This pull request updates the specified Helm charts to their desired versions as defined in `chart-versions.yaml`.
+      #     labels: |
+      #       helm
+      #       automation
+      #       charts
+
+
+
+      # # Step 5: Commit changes in a new branch
+      # - name: Create a new branch and commit changes
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     git config --local user.name "GitHub Actions Bot"
+      #     git config --local user.email "actions@github.com"
+      #     git checkout -b update-helm-charts-$(date +'%Y%m%d')
+
+      #      # Ignore the packages folder
+      #     echo "packages/" >> .gitignore
+
+      #     git add .
+      #     if git diff --cached --quiet; then
+      #       echo "No changes to commit"
+      #     else
+      #       git commit -m "Update Helm charts and index.html"
+      #     fi
+
+      # # Step 5: Process each chart release
+      # - name: Process each chart release
+      #   run: |
+      #     set -e  # Exit on any error
+      #     for CHART in $(awk '/^charts:/ {flag=1; next} /^  - / && flag {print $2}' "$CONFIG_FILE"); do
+      #       echo "Processing $CHART..."
+
+      #       # Check if the release exists
+      #       RELEASE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #         -H "Accept: application/vnd.github+json" \
+      #         https://api.github.com/repos/${{ github.repository }}/releases/tags/$CHART)
+
+      #       if echo "$RELEASE" | grep -q '"id":'; then
+      #         echo "Release $CHART already exists. Skipping..."
+      #         continue
+      #       fi
+
+      #       # Check if the chart has been updated
+      #       if git diff --name-only HEAD^ HEAD | grep -q "charts/$CHART"; then
+      #         echo "Chart $CHART has been updated. Creating release..."
+      #         helm package "./charts/$CHART"
+      #         helm repo index . --url https://github.com/${{ github.repository }}/releases
+
+      #         # Create a new GitHub release
+      #         TAG_NAME="$CHART"  # Use the chart name as the tag
+      #         echo "Creating release for $TAG_NAME..."
+      #         curl -s -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+      #           -H "Accept: application/vnd.github+json" \
+      #           https://api.github.com/repos/${{ github.repository }}/releases \
+      #           -d '{
+      #             "tag_name": "'"$TAG_NAME"'",
+      #             "name": "'"$TAG_NAME"'",
+      #             "body": "Automated release for '"$CHART"'",
+      #             "draft": false,
+      #             "prerelease": false
+      #           }'
+      #       else
+      #         echo "No changes detected for $CHART. Skipping release creation."
+      #       fi
+      #     done
