@@ -1,14 +1,33 @@
-apiVersion: v1
+annotations:
+  artifacthub.io/images: |
+    - name: consul
+      image: hashicorp/consul:1.20.1
+    - name: consul-k8s-control-plane
+      image: hashicorp/consul-k8s-control-plane:1.6.1
+    - name: consul-dataplane
+      image: hashicorp/consul-dataplane:1.6.1
+    - name: envoy
+      image: envoyproxy/envoy:v1.25.11
+  artifacthub.io/license: MPL-2.0
+  artifacthub.io/links: |
+    - name: Documentation
+      url: https://www.consul.io/docs/k8s
+    - name: hashicorp/consul
+      url: https://github.com/hashicorp/consul
+    - name: hashicorp/consul-k8s
+      url: https://github.com/hashicorp/consul-k8s
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/signKey: |
+    fingerprint: C874011F0AB405110D02105534365D9472D7468F
+    url: https://keybase.io/hashicorp/pgp_keys.asc
+apiVersion: v2
+appVersion: 1.20.1
+description: Official HashiCorp Consul Chart
+home: https://www.consul.io
+icon: https://raw.githubusercontent.com/hashicorp/consul-k8s/main/assets/icon.png
+kubeVersion: '>=1.22.0-0'
 name: consul
-home: https://github.com/hashicorp/consul
-version: 3.9.4
-appVersion: 1.5.3
-description: Highly available and distributed service discovery and key-value store
-  designed with support for the modern data center to make distributed systems and
-  configuration easy.
-icon: https://raw.githubusercontent.com/hashicorp/consul/bce3809dfca37b883828c3715b84143dd71c0f85/website/source/assets/images/favicons/android-chrome-512x512.png
 sources:
-- https://github.com/kelseyhightower/consul-on-kubernetes
-maintainers:
-- name: lachie83
-  email: lachlan.evenson@microsoft.com
+- https://github.com/hashicorp/consul
+- https://github.com/hashicorp/consul-k8s
+version: 1.6.1
