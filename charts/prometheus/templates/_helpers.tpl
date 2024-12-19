@@ -14,56 +14,23 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
-Create unified labels for prometheus components
+Create labels for prometheus
 */}}
 {{- define "prometheus.common.matchLabels" -}}
-app: {{ template "prometheus.name" . }}
-release: {{ .Release.Name }}
+app.kubernetes.io/name: {{ include "prometheus.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
+{{/*
+Create unified labels for prometheus components
+*/}}
 {{- define "prometheus.common.metaLabels" -}}
-chart: {{ template "prometheus.chart" . }}
-heritage: {{ .Release.Service }}
-{{- end -}}
-
-{{- define "prometheus.alertmanager.labels" -}}
-{{ include "prometheus.alertmanager.matchLabels" . }}
-{{ include "prometheus.common.metaLabels" . }}
-{{- end -}}
-
-{{- define "prometheus.alertmanager.matchLabels" -}}
-component: {{ .Values.alertmanager.name | quote }}
-{{ include "prometheus.common.matchLabels" . }}
-{{- end -}}
-
-{{- define "prometheus.kubeStateMetrics.labels" -}}
-{{ include "prometheus.kubeStateMetrics.matchLabels" . }}
-{{ include "prometheus.common.metaLabels" . }}
-{{- end -}}
-
-{{- define "prometheus.kubeStateMetrics.matchLabels" -}}
-component: {{ .Values.kubeStateMetrics.name | quote }}
-{{ include "prometheus.common.matchLabels" . }}
-{{- end -}}
-
-{{- define "prometheus.nodeExporter.labels" -}}
-{{ include "prometheus.nodeExporter.matchLabels" . }}
-{{ include "prometheus.common.metaLabels" . }}
-{{- end -}}
-
-{{- define "prometheus.nodeExporter.matchLabels" -}}
-component: {{ .Values.nodeExporter.name | quote }}
-{{ include "prometheus.common.matchLabels" . }}
-{{- end -}}
-
-{{- define "prometheus.pushgateway.labels" -}}
-{{ include "prometheus.pushgateway.matchLabels" . }}
-{{ include "prometheus.common.metaLabels" . }}
-{{- end -}}
-
-{{- define "prometheus.pushgateway.matchLabels" -}}
-component: {{ .Values.pushgateway.name | quote }}
-{{ include "prometheus.common.matchLabels" . }}
+app.kubernetes.io/version: {{ .Chart.AppVersion }}
+helm.sh/chart: {{ include "prometheus.chart" . }}
+app.kubernetes.io/part-of: {{ include "prometheus.name" . }}
+{{- with .Values.commonMetaLabels}}
+{{ toYaml . }}
+{{- end }}
 {{- end -}}
 
 {{- define "prometheus.server.labels" -}}
@@ -72,7 +39,7 @@ component: {{ .Values.pushgateway.name | quote }}
 {{- end -}}
 
 {{- define "prometheus.server.matchLabels" -}}
-component: {{ .Values.server.name | quote }}
+app.kubernetes.io/component: {{ .Values.server.name }}
 {{ include "prometheus.common.matchLabels" . }}
 {{- end -}}
 
@@ -94,54 +61,25 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
-Create a fully qualified alertmanager name.
+Create a fully qualified ClusterRole name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 */}}
+{{- define "prometheus.clusterRoleName" -}}
+{{- if .Values.server.clusterRoleNameOverride -}}
+{{ .Values.server.clusterRoleNameOverride | trunc 63 | trimSuffix "-" }}
+{{- else -}}
+{{ include "prometheus.server.fullname" . }}
+{{- end -}}
+{{- end -}}
 
+{{/*
+Create a fully qualified alertmanager name for communicating and check to ensure that `alertmanager` exists before trying to use it with the user via NOTES.txt
+*/}}
 {{- define "prometheus.alertmanager.fullname" -}}
-{{- if .Values.alertmanager.fullnameOverride -}}
-{{- .Values.alertmanager.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- if .Subcharts.alertmanager -}}
+{{- template "alertmanager.fullname" .Subcharts.alertmanager -}}
 {{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.alertmanager.name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name .Values.alertmanager.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Create a fully qualified kube-state-metrics name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-*/}}
-{{- define "prometheus.kubeStateMetrics.fullname" -}}
-{{- if .Values.kubeStateMetrics.fullnameOverride -}}
-{{- .Values.kubeStateMetrics.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.kubeStateMetrics.name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name .Values.kubeStateMetrics.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Create a fully qualified node-exporter name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-*/}}
-{{- define "prometheus.nodeExporter.fullname" -}}
-{{- if .Values.nodeExporter.fullnameOverride -}}
-{{- .Values.nodeExporter.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.nodeExporter.name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name .Values.nodeExporter.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
+{{- "alertmanager not found" -}}
 {{- end -}}
 {{- end -}}
 
@@ -163,105 +101,80 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 {{- end -}}
 
 {{/*
-Create a fully qualified pushgateway name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+Get KubeVersion removing pre-release information.
 */}}
-{{- define "prometheus.pushgateway.fullname" -}}
-{{- if .Values.pushgateway.fullnameOverride -}}
-{{- .Values.pushgateway.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
-{{- printf "%s-%s" .Release.Name .Values.pushgateway.name | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- printf "%s-%s-%s" .Release.Name $name .Values.pushgateway.name | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
+{{- define "prometheus.kubeVersion" -}}
+  {{- default .Capabilities.KubeVersion.Version (regexFind "v[0-9]+\\.[0-9]+\\.[0-9]+" .Capabilities.KubeVersion.Version) -}}
 {{- end -}}
 
 {{/*
 Return the appropriate apiVersion for deployment.
 */}}
 {{- define "prometheus.deployment.apiVersion" -}}
-{{- if semverCompare "<1.9-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "extensions/v1beta1" -}}
-{{- else if semverCompare "^1.9-0" .Capabilities.KubeVersion.GitVersion -}}
 {{- print "apps/v1" -}}
 {{- end -}}
-{{- end -}}
-{{/*
-Return the appropriate apiVersion for daemonset.
-*/}}
-{{- define "prometheus.daemonset.apiVersion" -}}
-{{- if semverCompare "<1.9-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "extensions/v1beta1" -}}
-{{- else if semverCompare "^1.9-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "apps/v1" -}}
-{{- end -}}
-{{- end -}}
+
 {{/*
 Return the appropriate apiVersion for networkpolicy.
 */}}
 {{- define "prometheus.networkPolicy.apiVersion" -}}
-{{- if semverCompare ">=1.4-0, <1.7-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "extensions/v1beta1" -}}
-{{- else if semverCompare "^1.7-0" .Capabilities.KubeVersion.GitVersion -}}
 {{- print "networking.k8s.io/v1" -}}
 {{- end -}}
-{{- end -}}
+
 {{/*
-Return the appropriate apiVersion for podsecuritypolicy.
+Return the appropriate apiVersion for poddisruptionbudget.
 */}}
-{{- define "prometheus.podSecurityPolicy.apiVersion" -}}
-{{- if semverCompare ">=1.3-0, <1.10-0" .Capabilities.KubeVersion.GitVersion -}}
-{{- print "extensions/v1beta1" -}}
-{{- else if semverCompare "^1.10-0" .Capabilities.KubeVersion.GitVersion -}}
+{{- define "prometheus.podDisruptionBudget.apiVersion" -}}
+{{- if .Capabilities.APIVersions.Has "policy/v1" }}
+{{- print "policy/v1" -}}
+{{- else -}}
 {{- print "policy/v1beta1" -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Create the name of the service account to use for the alertmanager component
+Return the appropriate apiVersion for rbac.
 */}}
-{{- define "prometheus.serviceAccountName.alertmanager" -}}
-{{- if .Values.serviceAccounts.alertmanager.create -}}
-    {{ default (include "prometheus.alertmanager.fullname" .) .Values.serviceAccounts.alertmanager.name }}
+{{- define "rbac.apiVersion" -}}
+{{- if .Capabilities.APIVersions.Has "rbac.authorization.k8s.io/v1" }}
+{{- print "rbac.authorization.k8s.io/v1" -}}
 {{- else -}}
-    {{ default "default" .Values.serviceAccounts.alertmanager.name }}
+{{- print "rbac.authorization.k8s.io/v1beta1" -}}
 {{- end -}}
 {{- end -}}
 
 {{/*
-Create the name of the service account to use for the kubeStateMetrics component
+Return the appropriate apiVersion for ingress.
 */}}
-{{- define "prometheus.serviceAccountName.kubeStateMetrics" -}}
-{{- if .Values.serviceAccounts.kubeStateMetrics.create -}}
-    {{ default (include "prometheus.kubeStateMetrics.fullname" .) .Values.serviceAccounts.kubeStateMetrics.name }}
-{{- else -}}
-    {{ default "default" .Values.serviceAccounts.kubeStateMetrics.name }}
-{{- end -}}
+{{- define "ingress.apiVersion" -}}
+  {{- if and (.Capabilities.APIVersions.Has "networking.k8s.io/v1") (semverCompare ">= 1.19.x" (include "prometheus.kubeVersion" .)) -}}
+      {{- print "networking.k8s.io/v1" -}}
+  {{- else if .Capabilities.APIVersions.Has "networking.k8s.io/v1beta1" -}}
+    {{- print "networking.k8s.io/v1beta1" -}}
+  {{- else -}}
+    {{- print "extensions/v1beta1" -}}
+  {{- end -}}
 {{- end -}}
 
 {{/*
-Create the name of the service account to use for the nodeExporter component
+Return if ingress is stable.
 */}}
-{{- define "prometheus.serviceAccountName.nodeExporter" -}}
-{{- if .Values.serviceAccounts.nodeExporter.create -}}
-    {{ default (include "prometheus.nodeExporter.fullname" .) .Values.serviceAccounts.nodeExporter.name }}
-{{- else -}}
-    {{ default "default" .Values.serviceAccounts.nodeExporter.name }}
-{{- end -}}
+{{- define "ingress.isStable" -}}
+  {{- eq (include "ingress.apiVersion" .) "networking.k8s.io/v1" -}}
 {{- end -}}
 
 {{/*
-Create the name of the service account to use for the pushgateway component
+Return if ingress supports ingressClassName.
 */}}
-{{- define "prometheus.serviceAccountName.pushgateway" -}}
-{{- if .Values.serviceAccounts.pushgateway.create -}}
-    {{ default (include "prometheus.pushgateway.fullname" .) .Values.serviceAccounts.pushgateway.name }}
-{{- else -}}
-    {{ default "default" .Values.serviceAccounts.pushgateway.name }}
+{{- define "ingress.supportsIngressClassName" -}}
+  {{- or (eq (include "ingress.isStable" .) "true") (and (eq (include "ingress.apiVersion" .) "networking.k8s.io/v1beta1") (semverCompare ">= 1.18.x" (include "prometheus.kubeVersion" .))) -}}
 {{- end -}}
+
+{{/*
+Return if ingress supports pathType.
+*/}}
+{{- define "ingress.supportsPathType" -}}
+  {{- or (eq (include "ingress.isStable" .) "true") (and (eq (include "ingress.apiVersion" .) "networking.k8s.io/v1beta1") (semverCompare ">= 1.18.x" (include "prometheus.kubeVersion" .))) -}}
 {{- end -}}
 
 {{/*
@@ -274,3 +187,51 @@ Create the name of the service account to use for the server component
     {{ default "default" .Values.serviceAccounts.server.name }}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Define the prometheus.namespace template if set with forceNamespace or .Release.Namespace is set
+*/}}
+{{- define "prometheus.namespace" -}}
+  {{- default .Release.Namespace .Values.forceNamespace -}}
+{{- end }}
+
+{{/*
+Define template prometheus.namespaces producing a list of namespaces to monitor
+*/}}
+{{- define "prometheus.namespaces" -}}
+{{- $namespaces := list }}
+{{- if and .Values.rbac.create .Values.server.useExistingClusterRoleName }}
+  {{- if .Values.server.namespaces -}}
+    {{- range $ns := join "," .Values.server.namespaces | split "," }}
+      {{- $namespaces = append $namespaces (tpl $ns $) }}
+    {{- end -}}
+  {{- end -}}
+  {{- if .Values.server.releaseNamespace -}}
+    {{- $namespaces = append $namespaces (include "prometheus.namespace" .) }}
+  {{- end -}}
+{{- end -}}
+{{ mustToJson $namespaces }}
+{{- end -}}
+
+{{/*
+Define prometheus.server.remoteWrite producing a list of remoteWrite configurations with URL templating
+*/}}
+{{- define "prometheus.server.remoteWrite" -}}
+{{- $remoteWrites := list }}
+{{- range $remoteWrite := .Values.server.remoteWrite }}
+  {{- $remoteWrites = tpl $remoteWrite.url $ | set $remoteWrite "url" | append $remoteWrites }}
+{{- end -}}
+{{ toYaml $remoteWrites }}
+{{- end -}}
+
+{{/*
+Define prometheus.server.remoteRead producing a list of remoteRead configurations with URL templating
+*/}}
+{{- define "prometheus.server.remoteRead" -}}
+{{- $remoteReads := list }}
+{{- range $remoteRead := .Values.server.remoteRead }}
+  {{- $remoteReads = tpl $remoteRead.url $ | set $remoteRead "url" | append $remoteReads }}
+{{- end -}}
+{{ toYaml $remoteReads }}
+{{- end -}}
+
