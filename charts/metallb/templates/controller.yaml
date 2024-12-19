@@ -3,10 +3,17 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ template "metallb.fullname" . }}-controller
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     {{- include "metallb.labels" . | nindent 4 }}
     app.kubernetes.io/component: controller
+    {{- range $key, $value := .Values.controller.labels }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
 spec:
+  {{- if .Values.controller.strategy }}
+  strategy: {{- toYaml .Values.controller.strategy | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "metallb.selectorLabels" . | nindent 6 }}
@@ -26,7 +33,13 @@ spec:
       labels:
         {{- include "metallb.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: controller
+        {{- range $key, $value := .Values.controller.labels }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
     spec:
+      {{- with .Values.controller.runtimeClassName }}
+      runtimeClassName: {{ . | quote }}
+      {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -43,11 +56,26 @@ spec:
         {{- if .Values.controller.image.pullPolicy }}
         imagePullPolicy: {{ .Values.controller.image.pullPolicy }}
         {{- end }}
+        {{- if .Values.controller.command }}
+        command:
+          - {{ .Values.controller.command }}
+        {{- end }}
         args:
         - --port={{ .Values.prometheus.metricsPort }}
-        - --config={{ template "metallb.configMapName" . }}
         {{- with .Values.controller.logLevel }}
         - --log-level={{ . }}
+        {{- end }}
+        {{- if .Values.loadBalancerClass }}
+        - --lb-class={{ .Values.loadBalancerClass }}
+        {{- end }}
+        {{- if .Values.controller.webhookMode }}
+        - --webhook-mode={{ .Values.controller.webhookMode }}
+        {{- end }}
+        {{- if .Values.controller.tlsMinVersion }}
+        - --tls-min-version={{ .Values.controller.tlsMinVersion }}
+        {{- end }}
+        {{- if .Values.controller.tlsCipherSuites }}
+        - --tls-cipher-suites={{ .Values.controller.tlsCipherSuites }}
         {{- end }}
         env:
         {{- if and .Values.speaker.enabled .Values.speaker.memberlist.enabled }}
@@ -56,9 +84,24 @@ spec:
         - name: METALLB_DEPLOYMENT
           value: {{ template "metallb.fullname" . }}-controller
         {{- end }}
+        {{- if .Values.speaker.frr.enabled }}
+        - name: METALLB_BGP_TYPE
+          value: frr
+        {{- end }}
+        {{- if or .Values.frrk8s.enabled .Values.frrk8s.external }}
+        - name: METALLB_BGP_TYPE
+          value: frr-k8s
+        {{- end }}
         ports:
         - name: monitoring
           containerPort: {{ .Values.prometheus.metricsPort }}
+        - containerPort: 9443
+          name: webhook-server
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
+          name: cert
+          readOnly: true
         {{- if .Values.controller.livenessProbe.enabled }}
         livenessProbe:
           httpGet:
@@ -83,7 +126,7 @@ spec:
         {{- end }}
         {{- with .Values.controller.resources }}
         resources:
-          {{- toYaml . | nindent 12 }}
+          {{- toYaml . | nindent 10 }}
         {{- end }}
         securityContext:
           allowPrivilegeEscalation: false
@@ -91,6 +134,37 @@ spec:
           capabilities:
             drop:
             - ALL
+      {{- if .Values.prometheus.secureMetricsPort }}
+      - name: kube-rbac-proxy
+        image: {{ .Values.prometheus.rbacProxy.repository }}:{{ .Values.prometheus.rbacProxy.tag }}
+        imagePullPolicy: {{ .Values.prometheus.rbacProxy.pullPolicy }}
+        args:
+          - --logtostderr
+          - --secure-listen-address=:{{ .Values.prometheus.secureMetricsPort }}
+          - --upstream=http://127.0.0.1:{{ .Values.prometheus.metricsPort }}/
+          - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+        {{- if .Values.prometheus.controllerMetricsTLSSecret }}
+          - --tls-private-key-file=/etc/metrics/tls.key
+          - --tls-cert-file=/etc/metrics/tls.crt
+        {{- end }}
+        ports:
+          - containerPort: {{ .Values.prometheus.secureMetricsPort }}
+            name: metricshttps
+        resources:
+          requests:
+            cpu: 10m
+            memory: 20Mi
+        terminationMessagePolicy: FallbackToLogsOnError
+        {{- if .Values.prometheus.controllerMetricsTLSSecret }}
+        volumeMounts:
+          - name: metrics-certs
+            mountPath: /etc/metrics
+            readOnly: true
+        {{- end }}
+      {{ end }}
+      {{- if .Values.controller.extraContainers }}
+      {{- toYaml .Values.controller.extraContainers | nindent 6 }}
+      {{- end }}
       nodeSelector:
         "kubernetes.io/os": linux
         {{- with .Values.controller.nodeSelector }}
@@ -106,5 +180,15 @@ spec:
       {{- end }}
       {{- with .Values.controller.priorityClassName }}
       priorityClassName: {{ . | quote }}
+      {{- end }}
+      volumes:
+      - name: cert
+        secret:
+          defaultMode: 420
+          secretName: metallb-webhook-cert
+      {{- if .Values.prometheus.controllerMetricsTLSSecret }}
+      - name: metrics-certs
+        secret:
+          secretName: {{ .Values.prometheus.controllerMetricsTLSSecret }}
       {{- end }}
 {{- end }}

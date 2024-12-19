@@ -1,39 +1,53 @@
 {{- $root := . }}
-{{- if and (.Values.master.JCasC.enabled) (.Values.master.sidecars.configAutoReload.enabled) }}
-{{- range $key, $val := .Values.master.JCasC.configScripts }}
+{{- if .Values.controller.sidecars.configAutoReload.enabled }}
+{{- range $key, $val := .Values.controller.JCasC.configScripts }}
+{{- if $val }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "jenkins.fullname" $root }}-jenkins-config-{{ $key }}
+  name: {{ template "jenkins.casc.configName" (list (printf "config-%s" $key) $ )}}
   namespace: {{ template "jenkins.namespace" $root }}
   labels:
     "app.kubernetes.io/name": {{ template "jenkins.name" $root}}
-    "helm.sh/chart": {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    {{- if $root.Values.renderHelmLabels }}
+    "helm.sh/chart": "{{ $root.Chart.Name }}-{{ $root.Chart.Version | replace "+" "_" }}"
+    {{- end }}
     "app.kubernetes.io/managed-by": "{{ $.Release.Service }}"
     "app.kubernetes.io/instance": "{{ $.Release.Name }}"
-    "app.kubernetes.io/component": "{{ $.Values.master.componentName }}"
+    "app.kubernetes.io/component": "{{ $.Values.controller.componentName }}"
     {{ template "jenkins.fullname" $root }}-jenkins-config: "true"
+{{- if $root.Values.controller.JCasC.configMapAnnotations }}
+  annotations:
+{{ toYaml $root.Values.controller.JCasC.configMapAnnotations | indent 4 }}
+{{- end }}
 data:
   {{ $key }}.yaml: |-
 {{ tpl $val $| indent 4 }}
 {{- end }}
-{{- if .Values.master.JCasC.defaultConfig }}
+{{- end }}
+{{- if .Values.controller.JCasC.defaultConfig }}
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "jenkins.fullname" $root }}-jenkins-jcasc-config
+  name: {{ template "jenkins.casc.configName" (list "jcasc-config" $ )}}
   namespace: {{ template "jenkins.namespace" $root }}
   labels:
     "app.kubernetes.io/name": {{ template "jenkins.name" $root}}
-    "helm.sh/chart": {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    {{- if .Values.renderHelmLabels }}
+    "helm.sh/chart": "{{ $root.Chart.Name }}-{{ $root.Chart.Version | replace "+" "_" }}"
+    {{- end }}
     "app.kubernetes.io/managed-by": "{{ $.Release.Service }}"
     "app.kubernetes.io/instance": "{{ $.Release.Name }}"
-    "app.kubernetes.io/component": "{{ $.Values.master.componentName }}"
+    "app.kubernetes.io/component": "{{ $.Values.controller.componentName }}"
     {{ template "jenkins.fullname" $root }}-jenkins-config: "true"
+{{- if $root.Values.controller.JCasC.configMapAnnotations }}
+  annotations:
+{{ toYaml $root.Values.controller.JCasC.configMapAnnotations | indent 4 }}
+{{- end }}
 data:
   jcasc-default-config.yaml: |-
-    {{- include "jenkins.casc.defaults" . |nindent 4 }}
+    {{- include "jenkins.casc.defaults" . | nindent 4 }}
 {{- end}}
 {{- end }}
