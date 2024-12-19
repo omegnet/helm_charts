@@ -1,0 +1,89 @@
+name: Update Charts
+
+on:
+  workflow_dispatch: # Trigger manually or schedule
+  push:
+    branches:
+      - main
+
+jobs:
+  update-helm-charts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pull latest changes from main
+        run: git pull origin main
+
+      - name: Create a new branch
+        run: |
+            RANDOM_STRING=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
+            export NEW_BRANCH="update-helm-charts-$(date +'%Y%m%d')-$RANDOM_STRING"
+            echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
+            git checkout -b "$NEW_BRANCH"
+
+      - name: Install Helm
+        run: |
+            curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+            chmod +x get_helm.sh
+            ./get_helm.sh
+        
+      - name: Add Helm Repositories
+        run: |
+            # Read repository URLs from a file
+            while IFS= read -r REPO; do
+                helm repo add $REPO
+            done < ./helm-repos.txt
+
+            helm repo update
+
+      - name: Upgrade Helm Charts
+        run: |
+            CONFIG_FILE="./chart-versions.yaml"
+            CHARTS_DIR="./charts"
+            CHART_NAME=$(ls charts | tr '\n' ',')"
+            if [ ! -f "$CONFIG_FILE" ]; then
+                echo "Configuration file $CONFIG_FILE not found! Exiting..."
+                exit 1
+            fi
+
+            CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+
+            mkdir -p $CHARTS_DIR
+            while IFS= read -r CHART_VERSION; do
+                CHART=$(echo "$CHART_VERSION" | awk '{print $1}')
+                VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')
+
+                if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
+                    # if [ -d "$CHART_NAME" ]; then
+                    #   rm -rf $CHARTS_DIR/$CHART_NAME
+                    # fi
+                    helm pull "$CHART" --version "$VERSION" --untar -d $CHARTS_DIR
+                fi
+            done <<< "$CHARTS"
+
+      - name: Commit changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+            git config --local user.name "GitHub Actions Bot"
+            git config --local user.email "actions@github.com"
+            git add -A
+            if git diff --cached --quiet; then
+            echo "No changes to commit."
+            else
+            git commit -m "Updated Helm charts"
+            git push --set-upstream origin "$NEW_BRANCH"
+            fi
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.NEW_BRANCH }}
+          title: "Update Helm Charts"
+          body: "This pull request updates the Helm charts to the latest versions."
+          base: main
