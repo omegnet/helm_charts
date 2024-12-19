@@ -70,17 +70,18 @@ jobs:
         run: |
             git config --local user.name "GitHub Actions Bot"
             git config --local user.email "actions@github.com"
-            git add -A
+            git add .
             if git diff --cached --quiet; then
-                echo "No changes to commit."
-                exit 0
+                echo "No changes to commit or push."
+                echo "SKIP_PR=true" >> $GITHUB_ENV
             else
-                git commit -m "Updated Helm charts"
+                git commit -m "Update Helm charts"
                 git push --set-upstream origin "$NEW_BRANCH"
+                echo "SKIP_PR=false" >> $GITHUB_ENV
             fi
 
       - name: Create Pull Request
-        if: success()  # Ensure the previous step succeeds
+        if: env.SKIP_PR == 'false'
         run: |
             gh pr create \
                 -B main \
