@@ -1,320 +1,109 @@
-# Consul Helm Chart
+# Consul on Kubernetes Helm Chart
 
-## Prerequisites Details
-* Kubernetes 1.10+
-* PV support on underlying infrastructure
+---
 
-## StatefulSet Details
-* http://kubernetes.io/docs/concepts/abstractions/controllers/statefulsets/
+ **We're looking for feedback on how folks are using Consul on Kubernetes. Please fill out our brief [survey](https://hashicorp.sjc1.qualtrics.com/jfe/form/SV_4MANbw1BUku7YhL)!** 
 
-## Chart Details
-This chart will do the following:
+## Overview
 
-* Implemented a dynamically scalable consul cluster using Kubernetes StatefulSet
+This is the Official HashiCorp Helm chart for installing and configuring Consul on Kubernetes. This chart supports multiple use cases of Consul on Kubernetes, depending on the values provided.
 
-## Installing the Chart
+For full documentation on this Helm chart along with all the ways you can use Consul with Kubernetes, please see the Consul and Kubernetes documentation.
 
-To install the chart with the release name `my-release`:
+> :warning: **Please note**: We take Consul's security and our users' trust very seriously. If
+you believe you have found a security issue in Consul K8s, _please responsibly disclose_
+by contacting us at [security@hashicorp.com](mailto:security@hashicorp.com).
 
-```bash
-$ helm install --name my-release stable/consul
-```
+## Features
+    
+  * [**Consul Service Mesh**](https://www.consul.io/docs/k8s/connect):
+    Run Consul Service Mesh on Kubernetes. This feature
+    injects Envoy sidecars and registers your Pods with Consul.
+    
+  * [**Catalog Sync**](https://www.consul.io/docs/k8s/service-sync):
+    Sync Consul services into first-class Kubernetes services and vice versa.
+    This enables Kubernetes to easily access external services and for
+    non-Kubernetes nodes to easily discover and access Kubernetes services.
 
-## My custom Chart
-# Namespace must exist
-```
-cd /helm/charts
-$ helm install --name consul  ./consul --namespace consul
-```
+## Installation
 
-## Without installing
-```
-$ helm install --name consul --debug --dry-run ./consul
-```
+`consul-k8s` is distributed in multiple forms:
 
-## Upgrading chart, after changing values in values.yaml
-```
-$ helm upgrade consul ./consul
-```
-## Delete the Chart
-```
-$ helm del --purge consul 
-```
-Storage pvc will not get deleted, to delete storage persisten volume claim, run:
-```
-for each in $(kubectl get pvc --no-headers=true -n consul  | awk '{print $1}'); do kubectl delete pvc $each -n consul; done
-```
+  * The recommended installation method is the official
+    [Consul Helm chart](https://github.com/hashicorp/consul-k8s/tree/main/charts/consul). This will
+    automatically configure the Consul and Kubernetes integration to run within
+    an existing Kubernetes cluster.
 
-## Configuration
+  * A [Docker image `hashicorp/consul-k8s-control-plane`](https://hub.docker.com/r/hashicorp/consul-k8s-control-plane) is available. This can be used to manually run `consul-k8s-control-plane` within a scheduled environment.
 
-The following table lists the configurable parameters of the consul chart and their default values.
+  * Consul K8s CLI, distributed as `consul-k8s`, can be used to install and uninstall Consul Kubernetes. See the [Consul K8s CLI Reference](https://www.consul.io/docs/k8s/k8s-cli) for more details on usage. 
 
-| Parameter               | Description                           | Default                                                    |
-| ----------------------- | ----------------------------------    | ---------------------------------------------------------- |
-| `Name`                  | Consul statefulset name               | `consul`                                                   |
-| `Image`                 | Container image name                  | `consul`                                                   |
-| `ImageTag`              | Container image tag                   | `1.5.2`                                                    |
-| `ImagePullPolicy`       | Container pull policy                 | `Always`                                                   |
-| `Replicas`              | k8s statefulset replicas              | `3`                                                        |
-| `Component`             | k8s selector key                      | `consul`                                                   |
-| `ConsulConfig`          | List of secrets and configMaps containing consul configuration | []                                |
-| `Cpu`                   | container requested cpu               | `100m`                                                     |
-| `DatacenterName`        | Consul Datacenter Name                | `dc1` (The consul default)                                 |
-| `DisableHostNodeId`     | Disable Node Id creation (uses random)| `false`                                                    |
-| `joinPeers`             | Set list of hosts for -retry-join     | `[]`                                                       |
-| `joinWan`               | Set list of hosts for -retry-join-wan | `[]`                                                       |
-| `Gossip.Encrypt`         | Whether or not gossip is encrypted    | `true`                                                     |
-| `GossipKey`             | Gossip-key to use by all members      | `nil`                                                      |
-| `Storage`               | Persistent volume size                | `1Gi`                                                      |
-| `StorageClass`          | Persistent volume storage class       | `nil`                                                      |
-| `HttpPort`              | Consul http listening port            | `8500`                                                     |
-| `Resources`             | Container resource requests and limits| `{}`                                                       |
-| `priorityClassName`     | priorityClassName                     | `nil`                                                      |
-| `RpcPort`               | Consul rpc listening port             | `8400`                                                     |
-| `SerflanPort`           | Container serf lan listening port     | `8301`                                                     |
-| `SerflanUdpPort`        | Container serf lan UDP listening port | `8301`                                                     |
-| `SerfwanPort`           | Container serf wan listening port     | `8302`                                                     |
-| `SerfwanUdpPort`        | Container serf wan UDP listening port | `8302`                                                     |
-| `ServerPort`            | Container server listening port       | `8300`                                                     |
-| `ConsulDnsPort`         | Container dns listening port          | `8600`                                                     |
-| `affinity`              | Consul affinity settings              | `see values.yaml`                                          |
-| `nodeSelector`          | Node labels for pod assignment        | `{}`                                                       |
-| `tolerations`           | Tolerations for pod assignment        | `[]`                                                       |
-| `podAnnotations`        | Annotations for pod                   | `{}`                                                       |
-| `maxUnavailable`        | Pod disruption Budget maxUnavailable  | `1`                                                        |
-| `ui.enabled`            | Enable Consul Web UI                  | `true`                                                     |
-| `uiIngress.enabled`     | Create Ingress for Consul Web UI      | `false`                                                    |
-| `uiIngress.annotations` | Associate annotations to the Ingress  | `{}`                                                       |
-| `uiIngress.labels`      | Associate labels to the Ingress       | `{}`                                                       |
-| `uiIngress.hosts`       | Associate hosts with the Ingress      | `[]`                                                       |
-| `uiIngress.path`        | Associate TLS with the Ingress        | `/`                                                        |
-| `uiIngress.tls`         | Associate path with the Ingress       | `[]`                                                       |
-| `uiService.enabled`     | Create dedicated Consul Web UI svc    | `true`                                                     |
-| `uiService.type`        | Dedicate Consul Web UI svc type       | `NodePort`                                                 |
-| `uiService.annotations` | Extra annotations for UI service      | `{}`                                                       |
-| `acl.enabled`           | Enable basic ACL configuration        | `false`                                                    |
-| `acl.masterToken`       | Master token that was provided in consul ACL config file | `""`                                    |
-| `acl.agentToken`        | Agent token that was provided in consul ACL config file | `""`                                     |
-| `test.image`            | Test container image requires kubectl + bash (used for helm test)   | `lachlanevenson/k8s-kubectl` |
-| `test.imageTag`         | Test container image tag  (used for helm test)     | `v1.4.8-bash`                                 |
-| `test.rbac.create`                      | Create rbac for test container                 | `false`                           |
-| `test.rbac.serviceAccountName`          | Name of existed service account for test container    | ``                         |
-| `additionalLabels`      | Add labels to Pod and StatefulSet     | `{}`                                                       |
-| `lifecycle`             | Lifecycle configuration, in YAML, for StatefulSet | `nil`                                          |
-| `forceIpv6`             | force to listen on IPv6 address                                                                    |
+### Prerequisites
 
-Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`.
+The following pre-requisites must be met before installing Consul on Kubernetes. 
 
-Alternatively, a YAML file that specifies the values for the parameters can be provided while installing the chart. For example,
+  * **Kubernetes 1.27.x - 1.30.x** - This represents the earliest versions of Kubernetes tested.
+    It is possible that this chart works with earlier versions, but it is
+    untested.
+  * Helm install
+    * **Helm 3.6+** for Helm based installs. 
+  * Consul K8s CLI based install
+    * `kubectl` configured to authenticate to a Kubernetes cluster with a valid `kubeconfig` file.
+    * `brew`, `yum`, or `apt` package manager on your local machine 
 
-```bash
-$ helm install --name my-release -f values.yaml stable/consul
-```
-> **Tip**: `ConsulConfig` is impossible to set using --set as it's not possible to set list of hashes with it at the moment, use a YAML file instead.
+### CLI
 
-> **Tip**: You can use the default [values.yaml](values.yaml)
+The Consul K8s CLI is the easiest way to get up and running with Consul on Kubernetes. See [Install Consul on K8s CLI](https://developer.hashicorp.com/consul/docs/k8s/installation/install-cli#install-the-cli) for more details on installation, and refer to 
+[Consul on Kubernetes CLI Reference](https://developer.hashicorp.com/consul/docs/k8s/k8s-cli) for more details on subcommands and a list of all available flags
+for each subcommand. 
 
-## Further consul configuration
 
-To support passing in more detailed/complex configuration options using `secret`s or `configMap`s. As an example, here is what a `values.yaml` could look like:
-```yaml
-ConsulConfig:
-  - type: configMap
-    name: consul-defaults
-  - type: secret
-    name: consul-secrets
-```
+ 1. Install the HashiCorp tap, which is a repository of all Homebrew packages for HashiCorp:
+ 
+    ``` bash
+    brew tap hashicorp/tap
+    ```
+  
+2. Install the Consul K8s CLI with hashicorp/tap/consul formula.
 
-> These are both mounted as files in the consul pods, including the secrets. When they are changed, the cluster may need to be restarted.
+    ``` bash
+    brew install hashicorp/tap/consul-k8s
+    ```
+  
+3. Issue the install subcommand to install Consul on Kubernetes:
+   
+    ``` bash 
+    consul-k8s install 
+    ```
 
-> **Important**: Kubernetes does not allow the volumes to be changed for a StatefulSet. If a new item needs to be added to this list, the StatefulSet needs to be deleted and re-created. The contents of each item can change and will be respected when the containers would read configuration (reload/restart).
+### Helm
 
-This would require the `consul-defaults` `configMap` and `consul-secrets` `secret` in the same `namespace`. There is no difference from the consul perspective, one could use only `secret`s, or only `configMap`s, or neither. They can each contain multiple consul configuration files (every `JSON` file contained in them will be interpreted as one). The order in which the configuration will be loaded is the same order as they are specified in the `ConsulConfig` setting (later overrides earlier). In case they contain multiple files, the order between those files is decided by consul (as per the [--config-dir](https://www.consul.io/docs/agent/options.html#_config_dir) argument in consul agent), but the order in `ConsulConfig` is still respected. The configuration generated by helm (this chart) is loaded last, and therefore overrides the configuration set here.
+The Helm chart is ideal for those who prefer to use Helm for automation for either the installation or upgrade of Consul on Kubernetes. The chart supports multiple use cases of Consul on Kubernetes, depending on the values provided. Detailed installation instructions for Consul on Kubernetes are found [here](https://www.consul.io/docs/k8s/installation/overview). 
 
-## Cleanup orphaned Persistent Volumes
+1. Add the HashiCorp Helm repository:
+   
+    ``` bash
+    helm repo add hashicorp https://helm.releases.hashicorp.com
+    ```
+    
+2. Ensure you have access to the Consul Helm chart and you see the latest chart version listed. If you have previously added the 
+   HashiCorp Helm repository, run `helm repo update`. 
 
-Deleting a StateFul will not delete associated Persistent Volumes.
+    ``` bash
+    helm search repo hashicorp/consul
+    ```
 
-Do the following after deleting the chart release to clean up orphaned Persistent Volumes.
+3. Now you're ready to install Consul! To install Consul with the default configuration using Helm 3.2 run the following command below.
+   This will create a `consul` Kubernetes namespace if not already present, and install Consul on the dedicated namespace. 
+ 
+   ``` bash
+   helm install consul hashicorp/consul --set global.name=consul --create-namespace -n consul
 
-```bash
-$ kubectl delete pvc -l component=${RELEASE-NAME}-consul
-```
+Please see the many options supported in the `values.yaml`
+file. These are also fully documented directly on the
+[Consul website](https://www.consul.io/docs/platform/k8s/helm.html).
 
-## Pitfalls
+## Tutorials
 
-* When ACLs are enabled and `acl_default_policy` is set to `deny`, it is necessary to set the `acl_token` to a token that can perform at least the `consul members`, otherwise the kubernetes liveness probe will keep failing and the containers will be killed every 5 minutes.
-  * Basic ACLs configuration can be done by setting `acl.enabled` to `true`, and setting values for `acl.masterToken` and `acl.agentToken`.
-
-## Testing
-
-Helm tests are included and they confirm the first three cluster members have quorum.
-
-```bash
-helm test <RELEASE_NAME>
-RUNNING: inky-marsupial-ui-test-nn6lv
-PASSED: inky-marsupial-ui-test-nn6lv
-```
-
-It will confirm that there are at least 3 consul servers present.
-
-## Cluster Health
-
-```
-$ for i in <0..n>; do kubectl exec <consul-$i> -- sh -c 'consul members'; done
-```
-eg.
-```
-for i in {0..2}; do kubectl exec consul-$i --namespace=consul -- sh -c 'consul members'; done
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-cluster is healthy
-```
-
-## Failover
-
-If any consul member fails it gets re-joined eventually.
-You can test the scenario by killing process of one of the pods:
-
-```
-shell
-$ ps aux | grep consul
-$ kill CONSUL_PID
-```
-
-```
-kubectl logs consul-0 --namespace=consul
-Waiting for consul-0.consul to come up
-Waiting for consul-1.consul to come up
-Waiting for consul-2.consul to come up
-==> WARNING: Expect Mode enabled, expecting 3 servers
-==> Starting Consul agent...
-==> Starting Consul agent RPC...
-==> Consul agent running!
-         Node name: 'consul-0'
-        Datacenter: 'dc1'
-            Server: true (bootstrap: false)
-       Client Addr: 0.0.0.0 (HTTP: 8500, HTTPS: -1, DNS: 8600, RPC: 8400)
-      Cluster Addr: 10.244.2.6 (LAN: 8301, WAN: 8302)
-    Gossip encrypt: false, RPC-TLS: false, TLS-Incoming: false
-             Atlas: <disabled>
-
-==> Log data will now stream in as it occurs:
-
-    2016/08/18 19:20:35 [INFO] serf: EventMemberJoin: consul-0 10.244.2.6
-    2016/08/18 19:20:35 [INFO] serf: EventMemberJoin: consul-0.dc1 10.244.2.6
-    2016/08/18 19:20:35 [INFO] raft: Node at 10.244.2.6:8300 [Follower] entering Follower state
-    2016/08/18 19:20:35 [INFO] serf: Attempting re-join to previously known node: consul-1: 10.244.3.8:8301
-    2016/08/18 19:20:35 [INFO] consul: adding LAN server consul-0 (Addr: 10.244.2.6:8300) (DC: dc1)
-    2016/08/18 19:20:35 [WARN] serf: Failed to re-join any previously known node
-    2016/08/18 19:20:35 [INFO] consul: adding WAN server consul-0.dc1 (Addr: 10.244.2.6:8300) (DC: dc1)
-    2016/08/18 19:20:35 [ERR] agent: failed to sync remote state: No cluster leader
-    2016/08/18 19:20:35 [INFO] agent: Joining cluster...
-    2016/08/18 19:20:35 [INFO] agent: (LAN) joining: [10.244.2.6 10.244.3.8 10.244.1.7]
-    2016/08/18 19:20:35 [INFO] serf: EventMemberJoin: consul-1 10.244.3.8
-    2016/08/18 19:20:35 [WARN] memberlist: Refuting an alive message
-    2016/08/18 19:20:35 [INFO] serf: EventMemberJoin: consul-2 10.244.1.7
-    2016/08/18 19:20:35 [INFO] serf: Re-joined to previously known node: consul-1: 10.244.3.8:8301
-    2016/08/18 19:20:35 [INFO] consul: adding LAN server consul-1 (Addr: 10.244.3.8:8300) (DC: dc1)
-    2016/08/18 19:20:35 [INFO] consul: adding LAN server consul-2 (Addr: 10.244.1.7:8300) (DC: dc1)
-    2016/08/18 19:20:35 [INFO] agent: (LAN) joined: 3 Err: <nil>
-    2016/08/18 19:20:35 [INFO] agent: Join completed. Synced with 3 initial agents
-    2016/08/18 19:20:51 [INFO] agent.rpc: Accepted client: 127.0.0.1:36302
-    2016/08/18 19:20:59 [INFO] agent.rpc: Accepted client: 127.0.0.1:36313
-    2016/08/18 19:21:01 [INFO] agent: Synced node info
-```
-
-## Scaling using kubectl
-
-The consul cluster can be scaled up by running ``kubectl patch`` or ``kubectl edit``. For example,
-
-```
-kubectl get pods -l "component=${RELEASE-NAME}-consul" --namespace=consul
-NAME       READY     STATUS    RESTARTS   AGE
-consul-0   1/1       Running   1          4h
-consul-1   1/1       Running   0          4h
-consul-2   1/1       Running   0          4h
-
-$ kubectl patch statefulset/consul -p '{"spec":{"replicas": 5}}'
-"consul" patched
-
-kubectl get pods -l "component=${RELEASE-NAME}-consul" --namespace=consul
-NAME       READY     STATUS    RESTARTS   AGE
-consul-0   1/1       Running   1          4h
-consul-1   1/1       Running   0          4h
-consul-2   1/1       Running   0          4h
-consul-3   1/1       Running   0          41s
-consul-4   1/1       Running   0          23s
-
-lachlanevenson@faux$ for i in {0..4}; do kubectl exec consul-$i --namespace=consul -- sh -c 'consul members'; done
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-consul-3  10.244.2.7:8301  alive   server  0.6.4  2         dc1
-consul-4  10.244.2.8:8301  alive   server  0.6.4  2         dc1
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-consul-3  10.244.2.7:8301  alive   server  0.6.4  2         dc1
-consul-4  10.244.2.8:8301  alive   server  0.6.4  2         dc1
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-consul-3  10.244.2.7:8301  alive   server  0.6.4  2         dc1
-consul-4  10.244.2.8:8301  alive   server  0.6.4  2         dc1
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-consul-3  10.244.2.7:8301  alive   server  0.6.4  2         dc1
-consul-4  10.244.2.8:8301  alive   server  0.6.4  2         dc1
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-consul-3  10.244.2.7:8301  alive   server  0.6.4  2         dc1
-consul-4  10.244.2.8:8301  alive   server  0.6.4  2         dc1
-```
-
-Scale down
-```
-kubectl patch statefulset/consul -p '{"spec":{"replicas": 3}}' --namespace=consul
-"consul" patched
-lachlanevenson@faux$ kubectl get pods -l "component=${RELEASE-NAME}-consul" --namespace=consul
-NAME       READY     STATUS    RESTARTS   AGE
-consul-0   1/1       Running   1          4h
-consul-1   1/1       Running   0          4h
-consul-2   1/1       Running   0          4h
-lachlanevenson@faux$ for i in {0..2}; do kubectl exec consul-$i --namespace=consul -- sh -c 'consul members'; done
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-consul-3  10.244.2.7:8301  failed  server  0.6.4  2         dc1
-consul-4  10.244.2.8:8301  failed  server  0.6.4  2         dc1
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-consul-3  10.244.2.7:8301  failed  server  0.6.4  2         dc1
-consul-4  10.244.2.8:8301  failed  server  0.6.4  2         dc1
-Node      Address          Status  Type    Build  Protocol  DC
-consul-0  10.244.2.6:8301  alive   server  0.6.4  2         dc1
-consul-1  10.244.3.8:8301  alive   server  0.6.4  2         dc1
-consul-2  10.244.1.7:8301  alive   server  0.6.4  2         dc1
-consul-3  10.244.2.7:8301  failed  server  0.6.4  2         dc1
-consul-4  10.244.2.8:8301  failed  server  0.6.4  2         dc1
-```
+You can find examples and complete tutorials on how to deploy Consul on 
+Kubernetes using Helm on the [HashiCorp Learn website](https://learn.hashicorp.com/collections/consul/kubernetes).
