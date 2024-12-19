@@ -56,11 +56,12 @@ jobs:
             while IFS= read -r CHART_VERSION; do
                 CHART=$(echo "$CHART_VERSION" | awk '{print $1}')
                 VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')
+                CHART_NAME=$(echo $CHART |awk -F '/' '{print $2}')
 
                 if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
-                    # if [ -d "$CHART_NAME" ]; then
-                    #   rm -rf $CHARTS_DIR/$CHART_NAME
-                    # fi
+                    if [ -d "$CHART_NAME" ]; then
+                      rm -rf $CHARTS_DIR/$CHART_NAME
+                    fi
                     helm pull "$CHART" --version "$VERSION" --untar -d $CHARTS_DIR
                 fi
             done <<< "$CHARTS"
