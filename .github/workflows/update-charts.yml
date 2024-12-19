@@ -72,18 +72,23 @@ jobs:
             git config --local user.email "actions@github.com"
             git add -A
             if git diff --cached --quiet; then
-            echo "No changes to commit."
+                echo "No changes to commit."
+                exit 0
             else
-            git commit -m "Updated Helm charts"
-            git push --set-upstream origin "$NEW_BRANCH"
+                git commit -m "Updated Helm charts"
+                git push --set-upstream origin "$NEW_BRANCH"
             fi
 
-      - name: create pull request
+      - name: Create Pull Request
+        if: success()  # Ensure the previous step succeeds
         run: |
+            if [ "$(git rev-parse HEAD)" = "$(git rev-parse @{u})" ]; then
+                echo "No changes to create a pull request."
+                exit 0
+            fi
             gh pr create \
-            -B main \
-            --title 'Merge "${{ env.NEW_BRANCH }}" into main' \
-            --body 'This pull request updates the specified Helm charts to their desired versions as defined in `chart-versions.yaml`.'
+                -B main \
+                --title "Merge '${{ env.NEW_BRANCH }}' into main" \
+                --body "This pull request updates the specified Helm charts to their desired versions as defined in \`chart-versions.yaml\`."
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    

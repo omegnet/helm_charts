@@ -17,6 +17,14 @@ jobs:
       - name: Pull latest changes from main
         run: git pull origin main
 
+      - name: Repackage Helm charts
+        run: |
+            CHARTS_DIR="./charts"
+            mkdir -p packages
+            for package in $(ls $CHARTS_DIR); do
+                helm package charts/$package --destination packages
+            done
+
       - name: Checkout gh-pages branch
         run: |
             git fetch origin gh-pages
@@ -28,14 +36,6 @@ jobs:
             export NEW_BRANCH="repackage-charts-$(date +'%Y%m%d')-$RANDOM_STRING"
             echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
             git checkout -b "$NEW_BRANCH"
-
-      - name: Repackage Helm charts
-        run: |
-            CHARTS_DIR="./charts"
-            mkdir -p packages
-            for package in $(ls $CHARTS_DIR); do
-                helm package charts/$package --destination packages
-            done
 
       - name: Copy index.html to root
         run: |
