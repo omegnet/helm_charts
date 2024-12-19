@@ -82,10 +82,6 @@ jobs:
       - name: Create Pull Request
         if: success()  # Ensure the previous step succeeds
         run: |
-            if [ "$(git rev-parse HEAD)" = "$(git rev-parse @{u})" ]; then
-                echo "No changes to create a pull request."
-                exit 0
-            fi
             gh pr create \
                 -B main \
                 --title "Merge '${{ env.NEW_BRANCH }}' into main" \

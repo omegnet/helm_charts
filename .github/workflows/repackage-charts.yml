@@ -20,9 +20,12 @@ jobs:
       - name: Repackage Helm charts
         run: |
             CHARTS_DIR="./charts"
+            PACKAGE_DIR="packages"
+            REPO_URL="https://github.com/omegnet/helm_charts"
             mkdir -p packages
             for package in $(ls $CHARTS_DIR); do
-                helm package charts/$package --destination packages
+                helm package charts/$package --destination $PACKAGE_DIR
+                helm repo index --url "$REPO_URL" --merge ./index.yaml $PACKAGE_DIR
             done
 
       - name: Checkout gh-pages branch
