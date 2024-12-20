@@ -55,8 +55,8 @@ jobs:
             ls -l ./packages
             ls -l
             # cp packages/index.yaml .
-            # git add packages
-            # git add index.yaml
+            git add packages
+            git add index.yaml
 
       - name: Commit changes
         env:
@@ -64,7 +64,7 @@ jobs:
         run: |
             git config --local user.name "GitHub Actions Bot"
             git config --local user.email "actions@github.com"
-            git add .
+            # git add .
             if git diff --cached --quiet; then
                 echo "No changes to commit or push."
                 echo "SKIP_PR=true" >> $GITHUB_ENV
