@@ -31,10 +31,9 @@ jobs:
             mkdir -p packages
             for package in $(ls $CHARTS_DIR); do
                 helm package charts/$package --destination $PACKAGE_DIR
-                
             done
             helm repo index $PACKAGE_DIR --url "$REPO_URL" 
-            
+
       - name: Checkout gh-pages branch
         run: |
             git fetch origin gh-pages
