@@ -25,7 +25,7 @@ jobs:
             mkdir -p packages
             for package in $(ls $CHARTS_DIR); do
                 helm package charts/$package --destination $PACKAGE_DIR
-                helm repo index --url "$REPO_URL" --merge $PACKAGE_DIR $PACKAGE_DIR/index.yaml
+                helm repo index $PACKAGE_DIR --merge index.yaml --url "$REPO_URL" 
             done
 
       - name: Checkout gh-pages branch
