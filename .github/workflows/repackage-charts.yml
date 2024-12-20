@@ -35,6 +35,7 @@ jobs:
             done
             helm repo index $PACKAGE_DIR --url "$REPO_URL" 
             ls -l
+
       - name: Checkout gh-pages branch
         run: |
             git fetch origin gh-pages
