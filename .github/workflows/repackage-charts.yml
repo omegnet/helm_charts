@@ -52,10 +52,8 @@ jobs:
 
       - name: Copy index.html to root
         run: |
-            ls -l ./packages
-            ls -l
-            # cp packages/index.yaml .
-            git add packages
+            cp packages/index.yaml .
+            # git add packages
             git add index.yaml
 
       - name: Commit changes
