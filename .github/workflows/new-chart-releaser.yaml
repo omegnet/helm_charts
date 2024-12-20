@@ -1,0 +1,41 @@
+name: Release Helm Charts
+
+on:
+  push:
+    branches:
+      - workflow3
+    paths:
+      - 'charts/**' 
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Add dependency repositories
+        run: |
+          # Read repository URLs from a file
+            while IFS= read -r REPO; do
+                helm repo add $REPO
+            done < ./helm-repos.txt
+
+            helm repo update
+
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.5.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
