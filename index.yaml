@@ -25,9 +25,9 @@ entries:
         url: https://keybase.io/hashicorp/pgp_keys.asc
     apiVersion: v2
     appVersion: 1.20.1
-    created: "2024-12-20T20:27:33.314459884Z"
+    created: "2024-12-20T20:51:46.246226389Z"
     description: Official HashiCorp Consul Chart
-    digest: 9c97c436f70d3e6b2222ec3c50bb0882e68e2f1078e69aaccc0ddb2d3ccf481d
+    digest: 962aa1543bae19c84002a8d8f8ca664ba5a285e1dd5cac4590dae39a3d1da997
     home: https://www.consul.io
     icon: https://raw.githubusercontent.com/hashicorp/consul-k8s/main/assets/icon.png
     kubeVersion: '>=1.22.0-0'
@@ -36,7 +36,7 @@ entries:
     - https://github.com/hashicorp/consul
     - https://github.com/hashicorp/consul-k8s
     urls:
-    - https://github.com/omegnet/helm_charts/consul-1.6.1.tgz
+    - https://github.com/omegnet/helm_charts/releases/consul-1.6.1.tgz
     version: 1.6.1
   grafana:
   - annotations:
@@ -48,9 +48,9 @@ entries:
           url: https://github.com/grafana/grafana
     apiVersion: v2
     appVersion: 11.4.0
-    created: "2024-12-20T20:27:33.317081448Z"
+    created: "2024-12-20T20:51:46.24920827Z"
     description: The leading tool for querying and visualizing time series and metrics.
-    digest: 4c9814a09a7e4d5fd66e05fdeefb858802a33c04852de35c92db0fa9e4e45235
+    digest: fb781b2ae11de6aa05d58b96b0d16fc492a6eed90ff731c393993ca246d6adc3
     home: https://grafana.com
     icon: https://artifacthub.io/image/b4fed1a7-6c8f-4945-b99d-096efa3e4116
     keywords:
@@ -76,7 +76,7 @@ entries:
     - https://github.com/grafana/helm-charts
     type: application
     urls:
-    - https://github.com/omegnet/helm_charts/grafana-8.7.0.tgz
+    - https://github.com/omegnet/helm_charts/releases/grafana-8.7.0.tgz
     version: 8.7.0
   ingress-nginx:
   - annotations:
@@ -92,10 +92,10 @@ entries:
       artifacthub.io/prerelease: "false"
     apiVersion: v2
     appVersion: 1.2.1
-    created: "2024-12-20T20:27:33.319976302Z"
+    created: "2024-12-20T20:51:46.251437327Z"
     description: Ingress controller for Kubernetes using NGINX as a reverse proxy
       and load balancer
-    digest: ca9aa6d055e99a9a3bca849acc60b5692afb29d3e2786560117fe6757713b2bc
+    digest: ea4a2c48899ffc394151632f1c00b055add6d087a0f4fcda177cee3796779dce
     home: https://github.com/kubernetes/ingress-nginx
     icon: https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Nginx_logo.svg/500px-Nginx_logo.svg.png
     keywords:
@@ -111,7 +111,7 @@ entries:
     - https://github.com/kubernetes/ingress-nginx
     type: application
     urls:
-    - https://github.com/omegnet/helm_charts/ingress-nginx-4.1.4.tgz
+    - https://github.com/omegnet/helm_charts/releases/ingress-nginx-4.1.4.tgz
     version: 4.1.4
   jenkins:
   - annotations:
@@ -135,11 +135,11 @@ entries:
           url: https://github.com/jenkinsci/helm-charts/issues
     apiVersion: v2
     appVersion: 2.479.2
-    created: "2024-12-20T20:27:33.323118467Z"
+    created: "2024-12-20T20:51:46.25465105Z"
     description: 'Jenkins - Build great things at any scale! As the leading open source
       automation server, Jenkins provides over 1800 plugins to support building, deploying
       and automating any project. '
-    digest: 20924ea4f16e23609a84e98cef0469dd31f7c6828b1a18b06684298c96c59f37
+    digest: 15ec883105b30397b6793c417237c315f1a75d775553786741d4758edc389c17
     home: https://www.jenkins.io/
     icon: https://get.jenkins.io/art/jenkins-logo/logo.svg
     keywords:
@@ -165,14 +165,14 @@ entries:
     - https://github.com/jenkinsci/configuration-as-code-plugin
     type: application
     urls:
-    - https://github.com/omegnet/helm_charts/jenkins-5.7.21.tgz
+    - https://github.com/omegnet/helm_charts/releases/jenkins-5.7.21.tgz
     version: 5.7.21
   longhorn:
   - apiVersion: v1
     appVersion: v1.7.2
-    created: "2024-12-20T20:27:33.325277257Z"
+    created: "2024-12-20T20:51:46.257908424Z"
     description: Longhorn is a distributed block storage system for Kubernetes.
-    digest: 005fa74a83d0cce467dad59114264ccf1f2ad5b1a8322c7052ea2cf17b5787a1
+    digest: a39bbb9e4dea7b34260a5be7f97ecc6f9ff3d19fcddba5da45dd2162b4c0b6d0
     home: https://github.com/longhorn/longhorn
     icon: https://raw.githubusercontent.com/cncf/artwork/master/projects/longhorn/icon/color/longhorn-icon-color.png
     keywords:
@@ -198,12 +198,12 @@ entries:
     - https://github.com/longhorn/longhorn-tests
     - https://github.com/longhorn/backing-image-manager
     urls:
-    - https://github.com/omegnet/helm_charts/longhorn-1.7.2.tgz
+    - https://github.com/omegnet/helm_charts/releases/longhorn-1.7.2.tgz
     version: 1.7.2
   metallb:
   - apiVersion: v2
     appVersion: v0.14.8
-    created: "2024-12-20T20:27:33.327987158Z"
+    created: "2024-12-20T20:51:46.260071046Z"
     dependencies:
     - condition: crds.enabled
       name: crds
@@ -215,7 +215,7 @@ entries:
       version: 0.0.14
     description: A network load-balancer implementation for Kubernetes using standard
       routing protocols
-    digest: 385f3c81a53fd470a1381f27f1c1055287d7115955f45f59ce19acd4761d13b9
+    digest: b49ac426648eaeeacd68e84703636b7d67cb6ac2263cd7bec16e158d5943fa6c
     home: https://metallb.universe.tf
     icon: https://metallb.universe.tf/images/logo/metallb-white.png
     kubeVersion: '>= 1.19.0-0'
@@ -224,14 +224,14 @@ entries:
     - https://github.com/metallb/metallb
     type: application
     urls:
-    - https://github.com/omegnet/helm_charts/metallb-0.14.8.tgz
+    - https://github.com/omegnet/helm_charts/releases/metallb-0.14.8.tgz
     version: 0.14.8
   metrics-server:
   - apiVersion: v1
     appVersion: 0.3.6
-    created: "2024-12-20T20:27:33.328458838Z"
+    created: "2024-12-20T20:51:46.260537216Z"
     description: Metrics Server is a cluster-wide aggregator of resource usage data.
-    digest: 504cecb35c391411e94053452a11eeeab89bfadc633cd47695cfb321cdfb9394
+    digest: a0bc7f7e62ce673f9d1ea15c72c09c9087484f12c205e5426324840688851270
     home: https://github.com/kubernetes-incubator/metrics-server
     keywords:
     - metrics-server
@@ -244,7 +244,7 @@ entries:
     sources:
     - https://github.com/kubernetes-incubator/metrics-server
     urls:
-    - https://github.com/omegnet/helm_charts/metrics-server-2.8.9.tgz
+    - https://github.com/omegnet/helm_charts/releases/metrics-server-2.8.9.tgz
     version: 2.8.9
   nexus:
   - annotations:
@@ -253,9 +253,9 @@ entries:
           image: sonatype/nexus3:3.38.0
     apiVersion: v2
     appVersion: 3.38.0
-    created: "2024-12-20T20:27:33.328864946Z"
+    created: "2024-12-20T20:51:46.260986143Z"
     description: Sonatype Nexus is an open source repository manager
-    digest: 24049a960c920f0ad92f48316fefaf7bf54e0c1bb76e1f107c788128d7fe7bb8
+    digest: 26672a4d4b26ed95c6aed0b780112775cca6694813bf7bf8f6c6fc516410da18
     home: https://github.com/curie-data-factory/helm-charts/tree/master/charts/nexus
     icon: https://help.sonatype.com/docs/files/331022/34537964/3/1564671303641/NexusRepo_Icon.png
     keywords:
@@ -270,15 +270,15 @@ entries:
     - https://github.com/sonatype/nexus-public
     type: application
     urls:
-    - https://github.com/omegnet/helm_charts/nexus-1.2.4.tgz
+    - https://github.com/omegnet/helm_charts/releases/nexus-1.2.4.tgz
     version: 1.2.4
   nfs-client-provisioner:
   - apiVersion: v1
     appVersion: 3.1.0
-    created: "2024-12-20T20:27:33.329241529Z"
+    created: "2024-12-20T20:51:46.261358016Z"
     description: nfs-client is an automatic provisioner that used your *already configured*
       NFS server, automatically creating Persistent Volumes.
-    digest: 46a4fc9ccbbf4d9e0197f75cb02125adecd548aa9834cc0309eb5c523cbbfc92
+    digest: d391c41fbc5e1af85b09c90c619561f01d719b02c767ce88810cd4f2690581b8
     home: https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client
     keywords:
     - nfs
@@ -290,16 +290,16 @@ entries:
     sources:
     - https://github.com/kubernetes-incubator/external-storage/tree/master/nfs-client
     urls:
-    - https://github.com/omegnet/helm_charts/nfs-client-provisioner-1.2.8.tgz
+    - https://github.com/omegnet/helm_charts/releases/nfs-client-provisioner-1.2.8.tgz
     version: 1.2.8
   nfs-subdir-external-provisioner:
   - apiVersion: v1
     appVersion: 4.0.2
-    created: "2024-12-20T20:27:33.329655552Z"
+    created: "2024-12-20T20:51:46.261811843Z"
     description: nfs-subdir-external-provisioner is an automatic provisioner that
       used your *already configured* NFS server, automatically creating Persistent
       Volumes.
-    digest: 68dfa9b7e1cd6f8db72a0b5f6b61afe89af10d8a940ba314eb5006b60d38c496
+    digest: 4df698632de24d22f476c10f929eae20c13ecec9b2768323ebcabca058a0fb75
     home: https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
     keywords:
     - nfs
@@ -310,7 +310,7 @@ entries:
     sources:
     - https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
     urls:
-    - https://github.com/omegnet/helm_charts/nfs-subdir-external-provisioner-4.0.18.tgz
+    - https://github.com/omegnet/helm_charts/releases/nfs-subdir-external-provisioner-4.0.18.tgz
     version: 4.0.18
   nginx-ingress-controller:
   - annotations:
@@ -323,7 +323,7 @@ entries:
       licenses: Apache-2.0
     apiVersion: v2
     appVersion: 1.11.3
-    created: "2024-12-20T20:27:33.33225788Z"
+    created: "2024-12-20T20:51:46.266248146Z"
     dependencies:
     - name: common
       repository: oci://registry-1.docker.io/bitnamicharts
@@ -332,7 +332,7 @@ entries:
       version: 2.x.x
     description: NGINX Ingress Controller is an Ingress controller that manages external
       access to HTTP services in a Kubernetes cluster using NGINX.
-    digest: 8a9dc82bd7b634ab32fd5ee179d69bc1d3d3fb48a9d7b2337ae1d1a678700b47
+    digest: e9cb5a444f3487935cdfd82715990267d8949f6ffae34219d4f0dbdf4b2b5092
     home: https://bitnami.com
     icon: https://bitnami.com/assets/stacks/nginx-ingress-controller/img/nginx-ingress-controller-stack-220x234.png
     keywords:
@@ -350,7 +350,7 @@ entries:
     sources:
     - https://github.com/bitnami/charts/tree/main/bitnami/nginx-ingress-controller
     urls:
-    - https://github.com/omegnet/helm_charts/nginx-ingress-controller-11.5.5.tgz
+    - https://github.com/omegnet/helm_charts/releases/nginx-ingress-controller-11.5.5.tgz
     version: 11.5.5
   prometheus:
   - annotations:
@@ -362,7 +362,7 @@ entries:
           url: https://github.com/prometheus/prometheus
     apiVersion: v2
     appVersion: v3.0.0
-    created: "2024-12-20T20:27:33.339365966Z"
+    created: "2024-12-20T20:51:46.272726135Z"
     dependencies:
     - condition: alertmanager.enabled
       name: alertmanager
@@ -381,7 +381,7 @@ entries:
       repository: https://prometheus-community.github.io/helm-charts
       version: 2.15.*
     description: Prometheus is a monitoring system and time series database.
-    digest: df91c963fd64323efaac17ce7a4ef997a86c0472ab917c6992fbadc46b6d7732
+    digest: a170b3542b4e9f8c766be187bc6e553f2cc93675c2132f8d31f2496b2b48b9d5
     home: https://prometheus.io/
     icon: https://raw.githubusercontent.com/prometheus/prometheus.github.io/master/assets/prometheus_logo-cb55bb5c346.png
     keywords:
@@ -408,6 +408,6 @@ entries:
     - https://github.com/kubernetes/kube-state-metrics
     type: application
     urls:
-    - https://github.com/omegnet/helm_charts/prometheus-26.0.0.tgz
+    - https://github.com/omegnet/helm_charts/releases/prometheus-26.0.0.tgz
     version: 26.0.0
-generated: "2024-12-20T20:27:33.306081636Z"
+generated: "2024-12-20T20:51:46.23702424Z"
