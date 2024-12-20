@@ -48,7 +48,7 @@ jobs:
       
       - name: Indexing updated charts
         run: |
-            helm repo index $PACKAGE_DIR --url "$REPO_URL"
+            helm repo index ./packages --url "$REPO_URL"
 
       - name: Copy index.html to root
         run: |
