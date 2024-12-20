@@ -52,9 +52,9 @@ jobs:
 
       - name: Copy index.html to root
         run: |
-            cp packages/index.html .
+            cp packages/index.yaml .
             git add packages
-            git add index.html
+            git add index.yaml
 
       - name: Commit changes
         env:
