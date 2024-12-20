@@ -1,12 +1,12 @@
 name: Repackage Charts
 
 on:
-  workflow_run:
-    workflows:
-      - Update Helm Charts # Name of the first workflow
-    types:
-      - completed
-  workflow_dispatch: # Allows manual trigger
+  # workflow_run:
+  #   workflows:
+  #     - Update Helm Charts # Name of the first workflow
+  #   types:
+  #     - completed
+  # workflow_dispatch: # Allows manual trigger
 
 
 jobs:
