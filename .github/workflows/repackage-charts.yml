@@ -25,6 +25,7 @@ jobs:
 
       - name: Repackage Helm charts
         run: |
+            #Package Helm charts
             CHARTS_DIR="./charts"
             PACKAGE_DIR="packages"
             REPO_URL="https://github.com/omegnet/helm_charts"
@@ -46,11 +47,11 @@ jobs:
             echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
             git checkout -b "$NEW_BRANCH"
 
-      - name: Copy index.html to root
-        run: |
-            mv packages/index.html .
-            git add packages
-            git add index.html
+      # - name: Copy index.html to root
+      #   run: |
+      #       mv packages/index.html .
+      #       git add packages
+      #       git add index.html
 
       - name: Commit changes
         env:
