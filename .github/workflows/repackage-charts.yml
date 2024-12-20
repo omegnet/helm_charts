@@ -33,26 +33,28 @@ jobs:
             for package in $(ls $CHARTS_DIR); do
                 helm package charts/$package --destination $PACKAGE_DIR
             done
-            helm repo index $PACKAGE_DIR --url "$REPO_URL" 
-            ls -l
 
       - name: Checkout gh-pages branch
         run: |
             git fetch origin gh-pages
             git checkout gh-pages
 
-      - name: Create a new branch for repackaging
+      - name: Create a new branch indexing
         run: |
             RANDOM_STRING=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 8)
             export NEW_BRANCH="repackage-charts-$(date +'%Y%m%d')-$RANDOM_STRING"
             echo "NEW_BRANCH=$NEW_BRANCH" >> $GITHUB_ENV
             git checkout -b "$NEW_BRANCH"
+      
+      - name: Indexing updated charts
+        run: |
+            helm repo index ./packages --url "$REPO_URL"
 
-      # - name: Copy index.html to root
-      #   run: |
-      #       mv packages/index.html .
-      #       git add packages
-      #       git add index.html
+      - name: Copy index.html to root
+        run: |
+            cp packages/index.html .
+            git add packages
+            git add index.html
 
       - name: Commit changes
         env:
