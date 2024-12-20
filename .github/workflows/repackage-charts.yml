@@ -28,7 +28,7 @@ jobs:
             #Package Helm charts
             CHARTS_DIR="./charts"
             PACKAGE_DIR="packages"
-            REPO_URL="https://github.com/omegnet/helm_charts"
+            
             mkdir -p packages
             for package in $(ls $CHARTS_DIR); do
                 helm package charts/$package --destination $PACKAGE_DIR
@@ -48,13 +48,14 @@ jobs:
       
       - name: Indexing updated charts
         run: |
-            helm repo index ./packages --url "$REPO_URL"
+            REPO_URL="https://github.com/omegnet/helm_charts"
+            helm repo index ./packages --merge ./index.yaml --url "$REPO_URL"
 
-      - name: Copy index.html to root
-        run: |
-            cp packages/index.yaml .
-            # git add packages
-            git add index.yaml
+      # - name: Copy index.html to root
+      #   run: |
+      #       # cp packages/index.yaml .
+      #       # git add packages
+      #       git add index.yaml
 
       - name: Commit changes
         env:
@@ -62,7 +63,9 @@ jobs:
         run: |
             git config --local user.name "GitHub Actions Bot"
             git config --local user.email "actions@github.com"
-            # git add .
+            git add index.yaml
+            # git add packages
+
             if git diff --cached --quiet; then
                 echo "No changes to commit or push."
                 echo "SKIP_PR=true" >> $GITHUB_ENV
