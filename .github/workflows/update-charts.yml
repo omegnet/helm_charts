@@ -1,10 +1,10 @@
 name: Update Helm Charts
 
 on:
-  workflow_dispatch: # Trigger manually or schedule
-  push:
-    branches:
-      - main
+  # workflow_dispatch: # Trigger manually or schedule
+  # push:
+  #   branches:
+  #     - main
 
 jobs:
   update-helm-charts:
