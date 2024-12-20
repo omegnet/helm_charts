@@ -3,7 +3,7 @@ name: All New Release Helm Charts
 on:
   push:
     branches:
-      - workflow3
+      - main
     paths:
       - 'charts/**' 
 
