@@ -35,7 +35,31 @@ jobs:
             done < ./helm-repos.txt
 
             helm repo update
+      
+      - name: Upgrade Helm Charts
+        run: |
+            CONFIG_FILE="./chart-versions.yaml"
+            CHARTS_DIR="./charts"
+            if [ ! -f "$CONFIG_FILE" ]; then
+                echo "Configuration file $CONFIG_FILE not found! Exiting..."
+                exit 1
+            fi
 
+            CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+
+            while IFS= read -r CHART_VERSION; do
+                CHART=$(echo "$CHART_VERSION" | awk '{print $1}')
+                VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')
+                CHART_NAME=$(echo "$CHART_VERSION" | awk '{print $1}' |awk -F '/' '{print $2}')
+
+                if helm show chart "$CHART" --version "$VERSION" >/dev/null 2>&1; then
+                    if [ -d "$CHARTS_DIR/$CHART_NAME" ]; then
+                      rm -rf $CHARTS_DIR/$CHART_NAME
+                    fi
+                    helm pull "$CHART" --version "$VERSION" --untar -d $CHARTS_DIR
+                fi
+            done <<< "$CHARTS"
+          
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.5.0
         env:
