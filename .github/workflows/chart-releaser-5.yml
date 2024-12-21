@@ -105,16 +105,16 @@ jobs:
         run: |
           cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
 
-      - name: Commit and push changes to new gh-pages branch
-        run: |
-          git add .
-          git commit -m "Update Helm charts"
-          git push origin ${{ env.gh_pages_branch_name }}
+      # - name: Commit and push changes to new gh-pages branch
+      #   run: |
+      #     git add .
+      #     git commit -m "Update Helm charts"
+      #     git push origin ${{ env.gh_pages_branch_name }}
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.branch_name }}
-          title: "Update Helm charts"
-          body: "This PR updates the Helm charts based on the latest versions."
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v3
+      #   with:
+      #     token: ${{ secrets.GITHUB_TOKEN }}
+      #     branch: ${{ env.branch_name }}
+      #     title: "Update Helm charts"
+      #     body: "This PR updates the Helm charts based on the latest versions."
