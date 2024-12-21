@@ -18,12 +18,12 @@ jobs:
         with:
           version: v3.5.4
 
-      - name: Install chart-releaser
-        run: |
-          mkdir -p ~/chart-releaser
-          curl -LO https://github.com/helm/chart-releaser/releases/download/v1.7.0/chart-releaser_1.7.0_linux_amd64.tar.gz
-          tar -xf chart-releaser_1.7.0_linux_amd64.tar.gz -C ~/chart-releaser
-          echo "PATH=$PATH:~/chart-releaser" >> $GITHUB_ENV
+      # - name: Install chart-releaser
+      #   run: |
+      #     mkdir -p ~/chart-releaser
+      #     curl -LO https://github.com/helm/chart-releaser/releases/download/v1.7.0/chart-releaser_1.7.0_linux_amd64.tar.gz
+      #     tar -xf chart-releaser_1.7.0_linux_amd64.tar.gz -C ~/chart-releaser
+      #     echo "PATH=$PATH:~/chart-releaser" >> $GITHUB_ENV
 
       - name: Update charts based on chart-versions.yaml
         run: |
@@ -40,7 +40,7 @@ jobs:
           fi
 
           # Read the chart_versions.yaml file using yq
-          CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+          CHARTS=$(yq -r '.charts[] | .chart + " " + .version + " " + .appVersion' "$CONFIG_FILE")
           
           # Create the packages directory if it doesn't exist
           mkdir -p $PACKAGES_DIR
@@ -49,11 +49,20 @@ jobs:
           while IFS= read -r CHART_VERSION; do
               CHART=$(echo "$CHART_VERSION" | awk '{print $1}')  # Chart name
               VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')  # Desired version
+              APP_VERSION=$(echo "$CHART_VERSION" | awk '{print $3}')  # Desired app version
               CHART_NAME=$(echo "$CHART_VERSION" | awk '{print $1}' |awk -F '/' '{print $2}')
 
               echo "Processing chart: $CHART"
               echo "Upgrading to version: $VERSION"
-              sed -i "s/^version:.*/version: $VERSION/" ./charts/$CHART_NAME/Chart.yaml
+              if [ -n "$VERSION" ]; then
+                  echo "Upgrading Chart Version to: $VERSION"
+                  sed -i "s/^version:.*/version: $VERSION/" ./charts/$CHART_NAME/Chart.yaml
+              fi
+
+              if [ -n "$APP_VERSION" ]; then
+                  echo "Upgrading appVersion to: $APP_VERSION"
+                  sed -i "s/^appVersion:.*/appVersion: $APP_VERSION/" ./charts/$CHART_NAME/Chart.yaml
+              fi
       
           done <<< "$CHARTS"
 
