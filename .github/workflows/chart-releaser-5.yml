@@ -91,14 +91,11 @@ jobs:
       - name: Upload packages to GitHub Releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PATH: $PATH:~/chart-releaser
+          # PATH: $PATH:~/chart-releaser
         run: |
-          curl -LO https://github.com/helm/chart-releaser/releases/download/v1.7.0/chart-releaser_1.7.0_linux_amd64.tar.gz
-          tar -xf chart-releaser_1.7.0_linux_amd64.tar.gz -C ~/chart-releaser
-          export PATH=$PATH:~/chart-releaser
-          
+          ls -l ~/chart-releaser
           for chart in ./packages ; do
-            cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
+            ~/chart-releaser/cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
           done
 
       - name: Update Helm repo index
