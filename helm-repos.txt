@@ -3,6 +3,7 @@ ingress-nginx https://kubernetes.github.io/ingress-nginx
 prometheus-community https://prometheus-community.github.io/helm-charts
 curiedfcharts https://curie-data-factory.github.io/helm-charts
 metallb https://metallb.github.io/metallb
+frr-k8s https://metallb.github.io/frr-k8s
 longhorn https://charts.longhorn.io
 nfs-subdir-external-provisioner https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
 jenkins https://charts.jenkins.io
