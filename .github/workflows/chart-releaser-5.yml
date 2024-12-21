@@ -49,10 +49,11 @@ jobs:
           while IFS= read -r CHART_VERSION; do
               CHART=$(echo "$CHART_VERSION" | awk '{print $1}')  # Chart name
               VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')  # Desired version
-            
+              CHART_NAME=$(echo "$CHART_VERSION" | awk '{print $1}' |awk -F '/' '{print $2}')
+
               echo "Processing chart: $CHART"
               echo "Upgrading to version: $VERSION"
-              sed -i "s/^version:.*/version: $VERSION/" ./charts/$CHART/Chart.yaml
+              sed -i "s/^version:.*/version: $VERSION/" ./charts/$CHART_NAME/Chart.yaml
       
           done <<< "$CHARTS"
 
