@@ -25,11 +25,6 @@ jobs:
           tar -xf chart-releaser_1.7.0_linux_amd64.tar.gz -C ~/chart-releaser
           echo "PATH=$PATH:~/chart-releaser" >> $GITHUB_ENV
 
-      - name: Install git
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git which
-
       - name: Update charts based on chart-versions.yaml
         run: |
           set -e
@@ -98,6 +93,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PATH: $PATH:~/chart-releaser
         run: |
+          curl -LO https://github.com/helm/chart-releaser/releases/download/v1.7.0/chart-releaser_1.7.0_linux_amd64.tar.gz
+          tar -xf chart-releaser_1.7.0_linux_amd64.tar.gz -C ~/chart-releaser
+          export PATH=$PATH:~/chart-releaser
+          
           for chart in ./packages ; do
             cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
           done
