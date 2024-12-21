@@ -1,0 +1,23 @@
+apiVersion: v1
+entries:
+  metrics-server:
+  - apiVersion: v1
+    appVersion: 0.3.6
+    created: "2024-12-21T21:56:22.22243329Z"
+    description: Metrics Server is a cluster-wide aggregator of resource usage data.
+    digest: 2510f0e26963d5a8a5f973f2a241d4648d7e35c75225244c61fe8d89d4dc92e0
+    home: https://github.com/kubernetes-incubator/metrics-server
+    keywords:
+    - metrics-server
+    maintainers:
+    - email: o.with@sportradar.com
+      name: olemarkus
+    - email: k.aasan@sportradar.com
+      name: kennethaasan
+    name: metrics-server
+    sources:
+    - https://github.com/kubernetes-incubator/metrics-server
+    urls:
+    - https://github.com/omegnet/helm_charts/releases/download/metrics-server-3.12.2/metrics-server-3.12.2.tgz
+    version: 3.12.2
+generated: "2024-12-21T21:56:22.222447706Z"
