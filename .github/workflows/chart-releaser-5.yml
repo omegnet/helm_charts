@@ -17,7 +17,16 @@ jobs:
         uses: azure/setup-helm@v1
         with:
           version: v3.5.4
+      
+      - name: Add dependency repositories
+        run: |
+          # Read repository URLs from a file
+            while IFS= read -r REPO; do
+                helm repo add $REPO
+            done < ./helm-repos.txt
 
+            helm repo update
+  
       # - name: Install chart-releaser
       #   run: |
       #     mkdir -p ~/chart-releaser
