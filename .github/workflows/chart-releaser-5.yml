@@ -67,7 +67,7 @@ jobs:
           git checkout -b $branch_name
           echo "::set-output name=branch_name::$branch_name"
 
-      - name: Commit and push changes to new branch
+      - name: Commit and push changes to main branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
