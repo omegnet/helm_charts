@@ -27,15 +27,37 @@ jobs:
 
       - name: Update charts based on chart-versions.yaml
         run: |
-          while IFS= read -r line; do
-            chart=$(echo $line | cut -d':' -f1)
-            version=$(echo $line | cut -d':' -f2)
-            sed -i "s/^version:.*/version: $version/" ./charts/$chart/Chart.yaml
-          done < chart-versions.yaml
+          set -e
+          echo "Reading specified chart versions..."
+          CONFIG_FILE="./chart-versions.yaml"
+          PACKAGES_DIR="./packages"
+          REPO_URL="https://omegnet.github.io/helm_charts/"
+
+          # Ensure the configuration file exists
+          if [ ! -f "$CONFIG_FILE" ]; then
+              echo "Configuration file $CONFIG_FILE not found! Exiting..."
+              exit 1
+          fi
+
+          # Read the chart_versions.yaml file using yq
+          CHARTS=$(yq -r '.charts[] | .chart + " " + .version' "$CONFIG_FILE")
+          
+          # Create the packages directory if it doesn't exist
+          mkdir -p $PACKAGES_DIR
+
+          # Loop through each chart and process it
+          while IFS= read -r CHART_VERSION; do
+              CHART=$(echo "$CHART_VERSION" | awk '{print $1}')  # Chart name
+              VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')  # Desired version
+            
+              echo "Processing chart: $CHART"
+              echo "Upgrading to version: $VERSION"
+              sed -i "s/^version:.*/version: $VERSION/" ./charts/$CHART/Chart.yaml
+      
+          done <<< "$CHARTS"
 
       - name: Package Helm charts
         run: |
-          mkdir -p packages
           helm package ./charts/* -d packages
 
       - name: Checkout gh-pages branch
