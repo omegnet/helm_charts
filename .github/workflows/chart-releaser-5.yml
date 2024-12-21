@@ -67,8 +67,7 @@ jobs:
           charts_dir: charts
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-
-
+          
       # - name: Create new branch
       #   id: create_branch
       #   run: |
@@ -112,6 +111,7 @@ jobs:
       #     PATH: $PATH:~/chart-releaser
       #   run: |
       #     cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
+
 
       # - name: Commit and push changes to new gh-pages branch
       #   run: |
