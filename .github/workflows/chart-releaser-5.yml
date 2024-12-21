@@ -1,7 +1,6 @@
 name: Update Helm Charts
 
 on:
-  workflow_dispatch: # Trigger manually
   push:
     branches:
       - main
@@ -61,6 +60,14 @@ jobs:
         run: |
           helm package ./charts/* -d packages
 
+      - name: Commit and push changes to main branch
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update Helm charts"
+          git push origin main
+
       - name: Checkout gh-pages branch
         run: |
           git fetch origin gh-pages
@@ -85,10 +92,8 @@ jobs:
         run: |
           cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
 
-      - name: Commit and push changes
+      - name: Commit and push changes to new branch
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Update Helm charts"
           git push origin $branch_name
