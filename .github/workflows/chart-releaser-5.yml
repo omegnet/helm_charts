@@ -60,6 +60,11 @@ jobs:
       - name: Package Helm charts
         run: |
           helm package ./charts/* -d packages
+      
+      - name: Author
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
