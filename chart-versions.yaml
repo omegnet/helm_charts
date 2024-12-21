@@ -2,8 +2,8 @@ charts:
 - chart: "bitnami/nginx-ingress-controller"
   version: "11.5.5"
 - chart: "metallb/metallb"
-  version: "0.14.8"
-  appVersion: v0.14.8
+  version: "0.14.9"
+  appVersion: "0.14.9"
 - chart: "nfs-subdir-external-provisioner/nfs-subdir-external-provisioner"
   version: "4.0.18"
 - chart: "longhorn/longhorn"
