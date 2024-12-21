@@ -1,0 +1,78 @@
+name: Update Helm Charts
+
+on:
+  workflow_dispatch: # Trigger manually
+  push:
+    branches:
+      - main
+
+jobs:
+  update-charts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v1
+        with:
+          version: v3.5.4
+
+      - name: Install chart-releaser
+        run: |
+          helm repo add chart-releaser https://chart-releaser.github.io/helm-plugin
+          helm plugin install chart-releaser
+
+      - name: Update charts based on chart-versions.yaml
+        run: |
+          while IFS= read -r line; do
+            chart=$(echo $line | cut -d':' -f1)
+            version=$(echo $line | cut -d':' -f2)
+            sed -i "s/^version:.*/version: $version/" ./charts/$chart/Chart.yaml
+          done < chart-versions.yaml
+
+      - name: Package Helm charts
+        run: |
+          mkdir -p packages
+          helm package ./charts/* -d packages
+
+      - name: Checkout gh-pages branch
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+      - name: Create new branch
+        run: |
+          branch_name="update-charts-$(date +%s)"
+          git checkout -b $branch_name
+
+      - name: Upload packages to GitHub Releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for chart in ./packages/*.tgz; do
+            cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
+          done
+
+      - name: Update Helm repo index
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Update Helm charts"
+          git push origin $branch_name
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ steps.create_new_branch.outputs.branch_name }}
+          title: "Update Helm charts"
+          body: "This PR updates the Helm charts based on the latest versions."
