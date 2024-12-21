@@ -61,6 +61,14 @@ jobs:
         run: |
           helm package ./charts/* -d packages
 
+      - name: Run chart-releaser
+        uses: helm/chart-releaser-action@v1.7.0
+        with:
+          charts_dir: charts
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+
       # - name: Create new branch
       #   id: create_branch
       #   run: |
@@ -88,22 +96,22 @@ jobs:
       #     git checkout -b $gh_pages_branch_name
       #     echo "gh_pages_branch_name=$gh_pages_branch_name" >> $GITHUB_ENV
 
-      - name: Upload packages to GitHub Releases
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # PATH: $PATH:~/chart-releaser
-        run: |
-          ls -l ~/chart-releaser
-          for chart in ./packages ; do
-            ~/chart-releaser/cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
-          done
+      # - name: Upload packages to GitHub Releases
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     # PATH: $PATH:~/chart-releaser
+      #   run: |
+      #     ls -l ~/chart-releaser
+      #     for chart in ./packages ; do
+      #       ~/chart-releaser/cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
+      #     done
 
-      - name: Update Helm repo index
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PATH: $PATH:~/chart-releaser
-        run: |
-          cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
+      # - name: Update Helm repo index
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     PATH: $PATH:~/chart-releaser
+      #   run: |
+      #     cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
 
       # - name: Commit and push changes to new gh-pages branch
       #   run: |
