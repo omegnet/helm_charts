@@ -60,23 +60,32 @@ jobs:
         run: |
           helm package ./charts/* -d packages
 
-      - name: Commit and push changes to main branch
+      - name: Create new branch
+        id: create_branch
+        run: |
+          branch_name="update-charts-$(date +%s)"
+          git checkout -b $branch_name
+          echo "::set-output name=branch_name::$branch_name"
+
+      - name: Commit and push changes to new branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Update Helm charts"
-          git push origin main
+          git push origin ${{ steps.create_branch.outputs.branch_name }}
 
       - name: Checkout gh-pages branch
         run: |
           git fetch origin gh-pages
           git checkout gh-pages
 
-      - name: Create new branch
+      - name: Create new branch from gh-pages
+        id: create_gh_pages_branch
         run: |
-          branch_name="update-charts-$(date +%s)"
-          git checkout -b $branch_name
+          gh_pages_branch_name="update-gh-pages-$(date +%s)"
+          git checkout -b $gh_pages_branch_name
+          echo "::set-output name=gh_pages_branch_name::$gh_pages_branch_name"
 
       - name: Upload packages to GitHub Releases
         env:
@@ -92,16 +101,16 @@ jobs:
         run: |
           cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
 
-      - name: Commit and push changes to new branch
+      - name: Commit and push changes to new gh-pages branch
         run: |
           git add .
           git commit -m "Update Helm charts"
-          git push origin $branch_name
+          git push origin ${{ steps.create_gh_pages_branch.outputs.gh_pages_branch_name }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ steps.create_new_branch.outputs.branch_name }}
+          branch: ${{ steps.create_branch.outputs.branch_name }}
           title: "Update Helm charts"
           body: "This PR updates the Helm charts based on the latest versions."
