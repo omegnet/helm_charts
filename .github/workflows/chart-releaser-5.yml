@@ -97,15 +97,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for chart in ./packages/*.tgz; do
-            ~/chart-releaser/cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
+          which cr
+          for chart in ./packages ; do
+            cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
           done
 
       - name: Update Helm repo index
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ~/chart-releaser/cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
+          which cr
+          cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
 
       - name: Commit and push changes to new gh-pages branch
         run: |
