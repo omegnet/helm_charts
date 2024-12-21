@@ -21,8 +21,9 @@ jobs:
       - name: Install chart-releaser
         run: |
           mkdir -p ~/chart-releaser
-          export PATH=$PATH:~/chart-releaser 
-          tar -xf $(curl -LO https://github.com/helm/chart-releaser/releases/download/v1.7.0/chart-releaser_1.7.0_linux_amd64.tar.gz) chart-releaser* -C ~/chart-releaser
+          curl -LO https://github.com/helm/chart-releaser/releases/download/v1.7.0/chart-releaser_1.7.0_linux_amd64.tar.gz
+          tar -xf chart-releaser_1.7.0_linux_amd64.tar.gz -C ~/chart-releaser
+          export PATH=$PATH:~/chart-releaser
 
       - name: Update charts based on chart-versions.yaml
         run: |
@@ -65,15 +66,15 @@ jobs:
         run: |
           branch_name="update-charts-$(date +%s)"
           git checkout -b $branch_name
-          echo "::set-output name=branch_name::$branch_name"
+          echo "branch_name=$branch_name" >> $GITHUB_ENV
 
-      - name: Commit and push changes to main branch
+      - name: Commit and push changes to new branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add .
           git commit -m "Update Helm charts"
-          git push origin ${{ steps.create_branch.outputs.branch_name }}
+          git push origin ${{ env.branch_name }}
 
       - name: Checkout gh-pages branch
         run: |
@@ -85,32 +86,34 @@ jobs:
         run: |
           gh_pages_branch_name="update-gh-pages-$(date +%s)"
           git checkout -b $gh_pages_branch_name
-          echo "::set-output name=gh_pages_branch_name::$gh_pages_branch_name"
+          echo "gh_pages_branch_name=$gh_pages_branch_name" >> $GITHUB_ENV
 
       - name: Upload packages to GitHub Releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PATH: $PATH:~/chart-releaser
         run: |
           for chart in ./packages/*.tgz; do
-            cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
+            ~/chart-releaser/cr upload --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path $chart
           done
 
       - name: Update Helm repo index
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PATH: $PATH:~/chart-releaser
         run: |
-          cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
+          ~/chart-releaser/cr index --owner omegnet --git-repo helm_charts --token $GITHUB_TOKEN --package-path ./packages --index-path ./index.yaml
 
       - name: Commit and push changes to new gh-pages branch
         run: |
           git add .
           git commit -m "Update Helm charts"
-          git push origin ${{ steps.create_gh_pages_branch.outputs.gh_pages_branch_name }}
+          git push origin ${{ env.gh_pages_branch_name }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ steps.create_branch.outputs.branch_name }}
+          branch: ${{ env.branch_name }}
           title: "Update Helm charts"
           body: "This PR updates the Helm charts based on the latest versions."
