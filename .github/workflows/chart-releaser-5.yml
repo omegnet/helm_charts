@@ -1,9 +1,12 @@
 name: Update Helm Charts
 
 on:
+  workflow_dispatch: # Trigger manually or schedule
   push:
     branches:
       - main
+    paths:
+      - 'charts/**' 
 
 jobs:
   update-charts:
@@ -63,14 +66,17 @@ jobs:
 
               echo "Processing chart: $CHART"
               echo "Upgrading to version: $VERSION"
+              echo "Version $VERSION for $CHART found. Proceeding..."
               if [ -n "$VERSION" ]; then
                   echo "Upgrading Chart Version to: $VERSION"
                   sed -i "s/^version:.*/version: $VERSION/" ./charts/$CHART_NAME/Chart.yaml
               fi
 
               if [ -n "$APP_VERSION" ]; then
-                  echo "Upgrading appVersion to: $APP_VERSION"
-                  sed -i "s/^appVersion:.*/appVersion: $APP_VERSION/" ./charts/$CHART_NAME/Chart.yaml
+                  if [ "$APP_VERSION" != "$CURRENT_VERSION" ]; then
+                      echo "Upgrading appVersion to: $APP_VERSION"
+                      sed -i "s/^appVersion:.*/appVersion: $APP_VERSION/" ./charts/$CHART_NAME/Chart.yaml
+                  fi
               fi
       
           done <<< "$CHARTS"
