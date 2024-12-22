@@ -34,7 +34,7 @@ while IFS= read -r CHART_VERSION; do
         fi
 
         if [ -n "$APP_VERSION" ]; then
-            if [ "$APP_VERSION" != "$CURRENT_VERSION" ]; then
+            if [ "$APP_VERSION" != "$CURRENT_APP_VERSION" ]; then
                 echo "Upgrading appVersion to: $APP_VERSION"
                 sed -i "s/^appVersion:.*/appVersion: $APP_VERSION/" ./charts/$CHART_NAME/Chart.yaml
             fi

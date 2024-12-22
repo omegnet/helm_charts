@@ -63,10 +63,21 @@ jobs:
               VERSION=$(echo "$CHART_VERSION" | awk '{print $2}')  # Desired version
               APP_VERSION=$(echo "$CHART_VERSION" | awk '{print $3}')  # Desired app version
               CHART_NAME=$(echo "$CHART_VERSION" | awk '{print $1}' |awk -F '/' '{print $2}')
+              CURRENT_APP_VERSION=$(grep "^appVersion:" "./charts/$CHART_NAME/Chart.yaml" | awk '{print $2}')
 
               echo "Processing chart: $CHART"
               echo "Upgrading to version: $VERSION"
-              sed -i "s/^version:.*/version: $VERSION/" ./charts/$CHART_NAME/Chart.yaml
+              if [ -n "$VERSION" ]; then
+                  echo "Upgrading Chart Version to: $VERSION"
+                  sed -i "s/^version:.*/version: $VERSION/" ./charts/$CHART_NAME/Chart.yaml
+              fi
+
+              if [ -n "$APP_VERSION" ]; then
+                  if [ "$APP_VERSION" != "$CURRENT_APP_VERSION" ]; then
+                      echo "Upgrading appVersion to: $APP_VERSION"
+                      sed -i "s/^appVersion:.*/appVersion: $APP_VERSION/" ./charts/$CHART_NAME/Chart.yaml
+                  fi
+              fi
       
           done <<< "$CHARTS"
 
