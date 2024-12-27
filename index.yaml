@@ -1,5 +1,43 @@
 apiVersion: v1
 entries:
+  consul:
+  - annotations:
+      artifacthub.io/images: |
+        - name: consul
+          image: hashicorp/consul:1.20.1
+        - name: consul-k8s-control-plane
+          image: hashicorp/consul-k8s-control-plane:1.6.1
+        - name: consul-dataplane
+          image: hashicorp/consul-dataplane:1.6.1
+        - name: envoy
+          image: envoyproxy/envoy:v1.25.11
+      artifacthub.io/license: MPL-2.0
+      artifacthub.io/links: |
+        - name: Documentation
+          url: https://www.consul.io/docs/k8s
+        - name: hashicorp/consul
+          url: https://github.com/hashicorp/consul
+        - name: hashicorp/consul-k8s
+          url: https://github.com/hashicorp/consul-k8s
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/signKey: |
+        fingerprint: C874011F0AB405110D02105534365D9472D7468F
+        url: https://keybase.io/hashicorp/pgp_keys.asc
+    apiVersion: v2
+    appVersion: 1.20.1
+    created: "2024-12-27T23:01:24.230172142Z"
+    description: Official HashiCorp Consul Chart
+    digest: f28fa9b9049aeaaf3bab11a8067fcdcd294c954eed7911091441472578cc5ede
+    home: https://www.consul.io
+    icon: https://raw.githubusercontent.com/hashicorp/consul-k8s/main/assets/icon.png
+    kubeVersion: '>=1.22.0-0'
+    name: consul
+    sources:
+    - https://github.com/hashicorp/consul
+    - https://github.com/hashicorp/consul-k8s
+    urls:
+    - https://github.com/omegnet/helm_charts/releases/download/consul-1.6.1/consul-1.6.1.tgz
+    version: 1.6.1
   grafana:
   - annotations:
       artifacthub.io/license: Apache-2.0
@@ -173,6 +211,52 @@ entries:
     urls:
     - https://github.com/omegnet/helm_charts/releases/download/metrics-server-3.12.2/metrics-server-3.12.2.tgz
     version: 3.12.2
+  nexus:
+  - annotations:
+      artifacthub.io/images: |
+        - name: nexus
+          image: sonatype/nexus3:3.38.0
+    apiVersion: v2
+    appVersion: 3.38.0
+    created: "2024-12-27T23:01:25.055193897Z"
+    description: Sonatype Nexus is an open source repository manager
+    digest: 6d52f54292d3ad57bdab9371b6a2740e3abcb65a33dffa02647aa04018d99c3d
+    home: https://github.com/curie-data-factory/helm-charts/tree/master/charts/nexus
+    icon: https://help.sonatype.com/docs/files/331022/34537964/3/1564671303641/NexusRepo_Icon.png
+    keywords:
+    - nexus
+    - registry
+    kubeVersion: '>= 1.14.0-0'
+    maintainers:
+    - email: armand.leopold@curie.fr
+      name: armandleopold
+    name: nexus
+    sources:
+    - https://github.com/sonatype/nexus-public
+    type: application
+    urls:
+    - https://github.com/omegnet/helm_charts/releases/download/nexus-1.2.4/nexus-1.2.4.tgz
+    version: 1.2.4
+  nfs-subdir-external-provisioner:
+  - apiVersion: v1
+    appVersion: 4.0.2
+    created: "2024-12-27T23:01:25.190164448Z"
+    description: nfs-subdir-external-provisioner is an automatic provisioner that
+      used your *already configured* NFS server, automatically creating Persistent
+      Volumes.
+    digest: db15460cfc2d05160e617dd119e1052e447fc2901d4408c2e765fb59e73924ec
+    home: https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
+    keywords:
+    - nfs
+    - storage
+    - provisioner
+    kubeVersion: '>=1.9.0-0'
+    name: nfs-subdir-external-provisioner
+    sources:
+    - https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
+    urls:
+    - https://github.com/omegnet/helm_charts/releases/download/nfs-subdir-external-provisioner-4.0.18/nfs-subdir-external-provisioner-4.0.18.tgz
+    version: 4.0.18
   nginx-ingress-controller:
   - annotations:
       category: Infrastructure
@@ -271,4 +355,4 @@ entries:
     urls:
     - https://github.com/omegnet/helm_charts/releases/download/prometheus-26.0.1/prometheus-26.0.1.tgz
     version: 26.0.1
-generated: "2024-12-22T00:39:53.562486003Z"
+generated: "2024-12-27T23:01:25.45536037Z"
