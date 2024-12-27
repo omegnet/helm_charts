@@ -30,4 +30,4 @@ name: consul
 sources:
 - https://github.com/hashicorp/consul
 - https://github.com/hashicorp/consul-k8s
-version: 1.6.1
+version: 1.6.0
