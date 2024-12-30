@@ -1,0 +1,46 @@
+# Example 1: Basic YAML Linter Configuration
+extends: default
+
+ignore: |
+    # Ignore the following directories
+    .git/
+    .github/
+    templates/
+
+rules:
+    line-length:
+        max: 120
+    comments:
+        min-spaces-from-content: 2
+    indentation:
+        spaces: 2
+
+# # Example 2: YAML Linter Configuration with Custom Rules
+# extends: default
+
+# rules:
+#     line-length:
+#         max: 80
+#     comments:
+#         min-spaces-from-content: 1
+#     indentation:
+#         spaces: 4
+#     trailing-spaces:
+#         level: error
+#     document-start:
+#         level: warning
+
+# # Example 3: YAML Linter Configuration with Disabled Rules
+# extends: default
+
+# rules:
+#     line-length:
+#         max: 100
+#     comments:
+#         min-spaces-from-content: 2
+#     indentation:
+#         spaces: 2
+#     document-start:
+#         enabled: false
+#     trailing-spaces:
+#         enabled: false
