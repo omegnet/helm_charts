@@ -5,7 +5,7 @@ ignore: |
     # Ignore the following directories
     .git/
     .github/
-    templates/
+    charts/
 
 rules:
     line-length:
