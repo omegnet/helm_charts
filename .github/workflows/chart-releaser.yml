@@ -10,6 +10,9 @@ on:
 
 jobs:
   update-charts:
+    permissions:
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
 
     steps:
@@ -74,9 +77,9 @@ jobs:
       
           done <<< "$CHARTS"
 
-      - name: Package Helm charts
-        run: |
-          helm package ./charts/* -d packages
+      # - name: Package Helm charts
+      #   run: |
+      #     helm package ./charts/* -d packages
       
       - name: Configure Git
         run: |
@@ -86,7 +89,9 @@ jobs:
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         with:
-          charts_dir: charts
+          charts_dir: './charts'
+          packages_with_index: true
+          skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_SKIP_EXISTING: true
+          # CR_SKIP_EXISTING: true
