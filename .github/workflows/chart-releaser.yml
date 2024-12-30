@@ -77,9 +77,9 @@ jobs:
       
           done <<< "$CHARTS"
 
-      - name: Package Helm charts
-        run: |
-          helm package ./charts/* -d packages
+      # - name: Package Helm charts
+      #   run: |
+      #     helm package ./charts/* -d packages
       
       - name: Configure Git
         run: |
